@@ -1,0 +1,60 @@
+---
+title: Manage Products
+description: "Edit, archive, and control the visibility of existing products in your catalog."
+---
+
+## Editing a Product
+
+1. Navigate to **Products** in the sidebar.
+2. Click the product you want to edit.
+3. Update any fields (name, description, features, media, visibility).
+4. Click **Save**.
+
+<Note>
+  Changing the **price** of an active product creates a new Stripe price and applies it to new subscriptions only. Existing subscribers keep their current price until they upgrade, downgrade, or renew.
+</Note>
+
+---
+
+## Archiving a Product
+
+Archiving hides a product from the public **Pricing Table** while preserving all existing subscriptions.
+
+1. Open the product.
+2. Click **Archive Product** in the top-right menu.
+3. Confirm the action.
+
+**What happens when you archive:**
+- The product no longer appears in `PricingTable`.
+- Existing subscribers are unaffected.
+- You can still link to a direct checkout URL for this product.
+- You can unarchive a product at any time to make it public again.
+
+---
+
+## Controlling Pricing Table Visibility
+
+Toggle **Show in Pricing Table** on each product to curate what customers see. This is useful for:
+
+- **Grandfathered plans** — hide old pricing from new customers while keeping active subscribers.
+- **Private plans** — invite-only tiers linked directly, not shown publicly.
+- **Seasonal promotions** — temporarily show or hide promotional pricing.
+
+---
+
+## Product Order
+
+Products appear in the `PricingTable` in the order defined on the **Products** page. Drag and drop to reorder them.
+
+---
+
+## Deleting a Product
+
+<Warning>
+  Products with active subscriptions cannot be deleted. Archive them instead. Only products with zero subscribers can be permanently deleted.
+</Warning>
+
+To delete a product:
+1. Ensure there are no active subscribers.
+2. Open the product → **More Options → Delete Product**.
+3. Confirm. This also deletes the corresponding Stripe product and prices.

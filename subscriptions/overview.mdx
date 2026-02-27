@@ -1,0 +1,75 @@
+---
+title: Subscriptions Overview
+description: "Subscriptions track recurring relationships between customers and your products."
+---
+
+## What is a Subscription?
+
+A **subscription** is created when a customer successfully completes checkout for a recurring product. It represents the ongoing relationship between the customer and your product — including the current billing period, payment status, and any trial.
+
+Subscriptions in BillingOS are backed by Stripe subscriptions, so BillingOS stays in sync via webhooks as Stripe processes renewals, failures, and cancellations.
+
+---
+
+## Subscription Status
+
+| Status | Description |
+|---|---|
+| `trialing` | Customer is in a free trial period; first charge hasn't occurred yet |
+| `active` | Subscription is current and payments are up to date |
+| `past_due` | A payment attempt failed; Stripe will retry automatically |
+| `canceled` | Subscription was canceled; access should be revoked |
+| `unpaid` | All payment retries exhausted; subscription is suspended |
+
+---
+
+## Billing Intervals
+
+| Interval | Description |
+|---|---|
+| `month` | Renews every calendar month |
+| `year` | Renews every calendar year |
+
+---
+
+## Trial Periods
+
+When a product has **Trial Days** configured, new subscribers enter a `trialing` state. During the trial:
+- No charge is made
+- The subscription is fully active and accessible
+- At trial end, Stripe automatically attempts the first payment
+
+If payment succeeds → status becomes `active`.  
+If payment fails → status moves to `past_due`.
+
+---
+
+## Subscription Lifecycle
+
+```
+Checkout Complete
+      ↓
+  trialing (if trial days > 0)
+      ↓
+   active  ←──────────────── renewal succeeds
+      ↓ payment fails
+  past_due ──→ retries → active (if recovered)
+      ↓ retries exhausted
+  canceled / unpaid
+```
+
+---
+
+## Real-time Updates
+
+BillingOS uses Stripe webhooks to update subscription status in real time. After a payment event:
+
+1. Stripe fires a webhook to BillingOS.
+2. BillingOS updates the subscription record in the database.
+3. The React SDK's React Query cache is invalidated — your UI updates automatically without a page reload.
+
+<CardGroup cols={1}>
+  <Card title="Manage Subscriptions" icon="repeat" href="/subscriptions/manage">
+    Upgrade, downgrade, and cancel subscriptions
+  </Card>
+</CardGroup>

@@ -1,80 +1,179 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: "Set up BillingOS and accept your first subscription in minutes."
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
+- A BillingOS account ([sign up at billingos.mintlify.app](https://billingos.mintlify.app))
+- A Stripe account (test mode is fine to start)
+- A React or Next.js application
 
-### Step 1: Set up your local environment
+---
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+## Step 1: Create Your Organization
 
-### Step 2: Deploy your changes
+When you first log in to BillingOS, you'll be prompted to create an **Organization**. This is your top-level workspace where all products, customers, subscriptions, and revenue data live.
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+1. Navigate to the BillingOS dashboard.
+2. Click **Create Organization**.
+3. Enter your organization name and confirm.
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+---
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+## Step 2: Connect Stripe
 
-### Step 3: Go live
+BillingOS processes all payments through Stripe. You need to connect a Stripe account before you can accept payments.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+1. In the sidebar, go to **Settings → Stripe Connect**.
+2. Click **Connect Stripe Account**.
+3. Complete the Stripe OAuth flow (you can use a test mode account).
+4. Once connected, your Stripe account status will show as **Active**.
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  BillingOS uses Stripe Connected Accounts, which means payouts go directly to your Stripe account — BillingOS never holds your funds.
 </Note>
+
+---
+
+## Step 3: Create a Product
+
+1. In the sidebar, go to **Products → New Product**.
+2. Fill in the product details:
+   - **Name** — e.g. "Pro Plan"
+   - **Description** — a short summary shown in the pricing table
+   - **Pricing type** — choose Monthly, Annual, One-time, or Free
+   - **Price** — e.g. $49/month
+   - **Features** — bullet points shown on your pricing card
+3. Click **Save Product**.
+
+BillingOS syncs your product to Stripe automatically.
+
+---
+
+## Step 4: Install the SDK
+
+Install the BillingOS React SDK and its peer dependencies:
+
+<CodeGroup>
+
+```bash npm
+npm install @billingos/sdk @tanstack/react-query @stripe/react-stripe-js @stripe/stripe-js
+```
+
+```bash pnpm
+pnpm add @billingos/sdk @tanstack/react-query @stripe/react-stripe-js @stripe/stripe-js
+```
+
+```bash yarn
+yarn add @billingos/sdk @tanstack/react-query @stripe/react-stripe-js @stripe/stripe-js
+```
+
+</CodeGroup>
+
+---
+
+## Step 5: Add BillingOSProvider
+
+Wrap your app (or the section that uses billing) with `BillingOSProvider`. You'll need to generate a **session token** from your backend and pass it in.
+
+```tsx app/layout.tsx (Next.js)
+import { BillingOSProvider } from '@billingos/sdk';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Fetch this from your backend — see Step 6
+  const sessionToken = await getSessionToken();
+
+  return (
+    <html>
+      <body>
+        <BillingOSProvider
+          apiUrl="https://your-billingos-backend.com"
+          sessionToken={sessionToken}
+          customerEmail={user.email}
+          customerName={user.name}
+        >
+          {children}
+        </BillingOSProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+---
+
+## Step 6: Generate a Session Token (Backend)
+
+Install the Node.js SDK on your server:
+
+```bash
+npm install @billingos/node
+```
+
+Create a secure endpoint to mint session tokens:
+
+```typescript app/api/billing-token/route.ts (Next.js)
+import { BillingOS } from '@billingos/node';
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+
+export async function GET(req: Request) {
+  const user = await getCurrentUser(req); // your auth
+
+  const { sessionToken, expiresAt } = await billing.createSessionToken({
+    externalUserId: user.id,
+    expiresIn: 3600, // 1 hour
+  });
+
+  return Response.json({ sessionToken, expiresAt });
+}
+```
+
+<Warning>
+  Never expose your `BILLINGOS_SECRET_KEY` to the browser. Always generate session tokens server-side.
+</Warning>
+
+---
+
+## Step 7: Add the Pricing Table
+
+Drop the `PricingTable` component anywhere you want to display your plans:
+
+```tsx app/pricing/page.tsx
+import { PricingTable } from '@billingos/sdk';
+
+export default function PricingPage() {
+  return (
+    <main>
+      <h1>Choose your plan</h1>
+      <PricingTable useCheckoutModal={true} />
+    </main>
+  );
+}
+```
+
+When a user clicks a plan, BillingOS opens a **secure, iframe-based checkout modal** powered by Stripe — PCI-compliant with zero extra configuration.
+
+---
+
+## You're Done!
+
+Your users can now browse your pricing table and subscribe. Stripe handles the payment, BillingOS creates the subscription, and you get real-time updates via webhooks.
+
+<CardGroup cols={2}>
+  <Card title="React SDK Reference" icon="react" href="/sdk/react">
+    All components, props, and hooks
+  </Card>
+  <Card title="Node.js SDK Reference" icon="node-js" href="/sdk/node">
+    Session tokens, webhooks, and customer management
+  </Card>
+  <Card title="Products" icon="box" href="/products/overview">
+    Pricing types and product configuration
+  </Card>
+  <Card title="Analytics" icon="chart-line" href="/analytics/overview">
+    MRR, revenue trends, and active subscriptions
+  </Card>
+</CardGroup>

@@ -1,0 +1,129 @@
+---
+title: React SDK
+description: "Frontend components and hooks for adding billing UI to your React or Next.js application."
+---
+
+## Installation
+
+```bash
+npm install @billingos/sdk @tanstack/react-query @stripe/react-stripe-js @stripe/stripe-js
+```
+
+**Peer dependencies required:**
+
+| Package | Version |
+|---|---|
+| `react` | `^18.0.0 \|\| ^19.0.0` |
+| `@tanstack/react-query` | `^5.90.0` |
+| `@stripe/react-stripe-js` | `^4.0.2` |
+| `@stripe/stripe-js` | `^7.1.0` |
+
+---
+
+## BillingOSProvider
+
+`BillingOSProvider` must wrap any component that uses BillingOS hooks or UI components. It sets up the Stripe context, React Query, and authenticates the current user via a session token.
+
+```tsx
+import { BillingOSProvider } from '@billingos/sdk';
+
+<BillingOSProvider
+  apiUrl="https://your-billingos-backend.com"
+  sessionToken={sessionToken}
+  customerEmail="jane@example.com"
+  customerName="Jane Smith"
+>
+  {/* Your app */}
+</BillingOSProvider>
+```
+
+### Props
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `apiUrl` | `string` | ✅ | Base URL of your BillingOS backend |
+| `sessionToken` | `string` | ✅ | Short-lived token from `@billingos/node` |
+| `customerEmail` | `string` | — | Prefills the customer's email in checkout |
+| `customerName` | `string` | — | Prefills the customer's name in checkout |
+
+<Note>
+  Generate the `sessionToken` server-side using the [Node.js SDK](/sdk/node). Never create session tokens in the browser.
+</Note>
+
+---
+
+## PricingTable
+
+Renders all active products from your BillingOS catalog as a pricing card grid. Customers can click a plan to open the checkout flow.
+
+```tsx
+import { PricingTable } from '@billingos/sdk';
+
+<PricingTable useCheckoutModal={true} />
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `useCheckoutModal` | `boolean` | `false` | Opens an iframe checkout modal instead of redirecting |
+
+When `useCheckoutModal={true}`, clicking any plan fires the secure iframe-based checkout (see [Checkout](/checkout/overview)).
+
+---
+
+## CheckoutModal
+
+For programmatic control, you can trigger the checkout modal directly using the `CheckoutModal` component and the `useCheckout` hook.
+
+```tsx
+import { CheckoutModal, useCheckout } from '@billingos/sdk';
+
+function UpgradeButton({ productId }: { productId: string }) {
+  const { open, isOpen, close } = useCheckout();
+
+  return (
+    <>
+      <button onClick={() => open({ productId })}>Upgrade</button>
+      <CheckoutModal isOpen={isOpen} onClose={close} />
+    </>
+  );
+}
+```
+
+---
+
+## useCheckout Hook
+
+| Method | Description |
+|---|---|
+| `open({ productId })` | Opens the checkout modal for a given product |
+| `close()` | Closes the modal |
+| `isOpen` | Boolean — whether the modal is currently visible |
+
+---
+
+## Global API
+
+For non-React environments (e.g., a Vanilla JS button), you can trigger checkout via the global `billingOS` object:
+
+```js
+window.billingOS.checkout.open({ productId: 'prod_abc123' });
+```
+
+---
+
+## How Checkout Works (Iframe)
+
+The checkout modal loads the BillingOS payment page inside a sandboxed `<iframe>`. This means:
+
+- ✅ **Card data never touches your servers** — PCI compliance is automatic
+- ✅ **Customer data is prefilled** from `customerEmail` / `customerName` props
+- ✅ **Subscriptions update in real-time** — no page reload needed after payment
+- ✅ **Stripe Connected Accounts** — payouts go straight to your Stripe account
+
+After payment, BillingOS:
+1. Creates the subscription in the database
+2. Fires a Stripe webhook to your backend
+3. Sends an update message to the parent page via `postMessage`
+4. Invalidates the React Query cache, refreshing subscription state instantly

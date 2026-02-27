@@ -1,0 +1,110 @@
+---
+title: AI Integration Guide
+description: "Use AI assistants like Claude, ChatGPT, or Cursor to integrate BillingOS faster — or build it yourself step by step."
+---
+
+## Two Ways to Integrate
+
+BillingOS docs are designed to work for both approaches:
+
+<CardGroup cols={2}>
+  <Card title="🤖 With AI" icon="robot" href="#integrate-with-ai">
+    Paste these docs into Cursor, Claude, or ChatGPT and let AI write the integration code for you.
+  </Card>
+  <Card title="🧑‍💻 Manually" icon="code" href="/quickstart">
+    Follow the step-by-step quickstart and copy-paste the code examples yourself.
+  </Card>
+</CardGroup>
+
+---
+
+## Integrate With AI
+
+Every page in these docs has an **"Open in AI"** button in the bottom-right corner. Click it to send the current page directly to:
+
+| Button | What it does |
+|---|---|
+| **Claude** | Opens the page in Claude with context loaded |
+| **ChatGPT** | Opens the page in ChatGPT |
+| **Cursor** | Loads the page into Cursor's AI chat |
+| **VS Code** | Opens with Copilot context |
+| **MCP** | Exposes the docs as an MCP tool for AI agents |
+
+---
+
+## Prompts That Work Well
+
+Copy and paste these into your AI assistant to get started quickly:
+
+### Full Integration Prompt
+
+```
+I'm integrating BillingOS into my Next.js app. Here's what I need:
+
+1. A server-side API route that generates a BillingOS session token 
+   using @billingos/node and my BILLINGOS_SECRET_KEY env var.
+
+2. A BillingOSProvider wrapping my layout that fetches the session 
+   token from that API route.
+
+3. A pricing page that renders a <PricingTable useCheckoutModal={true} />.
+
+My user object has: id, email, name.
+Use TypeScript and the Next.js App Router.
+```
+
+### Webhook Handler Prompt
+
+```
+Write a Next.js API route that:
+- Receives Stripe webhook events from BillingOS
+- Verifies the webhook signature using @billingos/node
+- Handles subscription.created → grants access
+- Handles subscription.canceled → revokes access
+Use my existing User model which has a subscriptionStatus field.
+```
+
+### Subscription Status Check Prompt
+
+```
+Using @billingos/node, write a utility function that checks 
+if a user has an active BillingOS subscription. It should:
+- Take a userId string
+- Call billing.subscriptions.list({ customerId })
+- Return true if any subscription has status 'active' or 'trialing'
+```
+
+---
+
+## MCP (Model Context Protocol)
+
+If you use an AI agent or workflow that supports MCP, you can connect it directly to these docs:
+
+1. Click the **MCP** button on any page.
+2. Your AI agent will have live access to the full BillingOS documentation as a tool.
+3. Ask it to write integration code, explain concepts, or debug your setup.
+
+---
+
+## Tips for AI-assisted Integration
+
+<AccordionGroup>
+  <Accordion title="Give AI your existing code as context">
+    Paste your current `layout.tsx`, `auth.ts`, and user model alongside the prompt. AI will match your existing patterns instead of inventing new ones.
+  </Accordion>
+  <Accordion title="Tell AI your stack upfront">
+    Specify: Next.js App Router vs Pages Router, your auth library (NextAuth, Clerk, Supabase Auth), and your database ORM. This prevents mismatches.
+  </Accordion>
+  <Accordion title="Use the copy button on code examples">
+    Every code block in these docs has a **Copy** button. Paste the example into your AI chat along with your question.
+  </Accordion>
+  <Accordion title="Ask AI to explain errors">
+    If you get a TypeScript error or a 401 response, paste the error + the relevant doc page into your AI assistant and ask it to debug.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Build It Yourself
+
+Prefer to do it manually? Follow the [Quickstart →](/quickstart) — each step has copy-paste-ready code for Next.js.

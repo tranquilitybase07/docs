@@ -1,0 +1,57 @@
+---
+title: SDK Overview
+description: "BillingOS provides two SDKs: a React SDK for your frontend and a Node.js SDK for your backend."
+---
+
+## Two SDKs, One Platform
+
+BillingOS ships two separate packages targeting different environments:
+
+| Package | Environment | Purpose |
+|---|---|---|
+| [`@billingos/sdk`](/sdk/react) | Browser / React | UI components: `PricingTable`, `CheckoutModal`, `BillingOSProvider` |
+| [`@billingos/node`](/sdk/node) | Node.js (server) | Session tokens, customer management, webhook verification |
+
+The typical integration pattern is:
+
+1. Your **backend** uses `@billingos/node` to generate a short-lived session token for the authenticated user.
+2. Your **frontend** uses `@billingos/sdk` to render the pricing table; the session token authorizes the checkout.
+
+## Installation
+
+<CodeGroup>
+
+```bash React SDK (frontend)
+npm install @billingos/sdk @tanstack/react-query @stripe/react-stripe-js @stripe/stripe-js
+```
+
+```bash Node.js SDK (backend)
+npm install @billingos/node
+```
+
+</CodeGroup>
+
+## Quick Example
+
+```tsx
+// Backend: generate a session token
+import { BillingOS } from '@billingos/node';
+const billing = new BillingOS({ secretKey: process.env.BILLINGOS_SECRET_KEY! });
+const { sessionToken } = await billing.createSessionToken({ externalUserId: user.id });
+
+// Frontend: pass token to the provider
+import { BillingOSProvider, PricingTable } from '@billingos/sdk';
+
+<BillingOSProvider apiUrl="https://api.billingos.io" sessionToken={sessionToken}>
+  <PricingTable useCheckoutModal={true} />
+</BillingOSProvider>
+```
+
+<CardGroup cols={2}>
+  <Card title="React SDK" icon="react" href="/sdk/react">
+    Components, hooks, and provider reference
+  </Card>
+  <Card title="Node.js SDK" icon="node-js" href="/sdk/node">
+    BillingOS class, session tokens, errors
+  </Card>
+</CardGroup>

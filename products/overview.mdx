@@ -1,0 +1,59 @@
+---
+title: Products Overview
+description: "Products are the billable items you sell — one-time purchases, recurring subscriptions, or free plans."
+---
+
+## What is a Product?
+
+In BillingOS, a **product** represents a single plan or item that customers can purchase. Each product has a name, description, pricing model, and a list of features. Products appear automatically in your `PricingTable` component and can be purchased via a checkout session.
+
+BillingOS keeps your product catalog in sync with Stripe — when you save a product in the dashboard, the corresponding Stripe price and product are created or updated automatically.
+
+---
+
+## Product Types
+
+| Type | Description |
+|---|---|
+| **Free** | No payment required. Customers can subscribe at no cost. |
+| **One-time** | Customer pays once and gains lifetime access or a one-off item. |
+| **Recurring — Monthly** | Fixed price billed each month. |
+| **Recurring — Annual** | Fixed price billed once per year (often with a discount). |
+| **Metered** | Usage-based pricing. You report usage; Stripe bills at the end of the period. |
+| **Seat-based** | Price scales with the number of users/seats on a plan. |
+
+---
+
+## Product Fields
+
+| Field | Description |
+|---|---|
+| **Name** | Displayed on the pricing card and checkout page. |
+| **Description** | Short summary of what the plan includes. |
+| **Price** | Amount charged per billing period (or per unit for metered/seat-based). |
+| **Currency** | ISO currency code — e.g. `USD`, `EUR`. |
+| **Billing Interval** | `month`, `year`, or `one_time`. |
+| **Trial Days** | Optional free trial period before the first charge. |
+| **Features** | Bullet-point list of included features, shown on the pricing card. |
+| **Media** | Optional image or icon for the product card. |
+| **Visibility** | Whether the product appears in the public pricing table. |
+
+---
+
+## Product Lifecycle
+
+```
+Draft → Active → Archived
+```
+
+- **Active** products are visible in the pricing table and can be purchased.
+- **Archived** products remain accessible to existing subscribers but are hidden from new customers.
+
+<CardGroup cols={2}>
+  <Card title="Create a Product" icon="plus" href="/products/create-product">
+    Step-by-step guide to adding your first product
+  </Card>
+  <Card title="Manage Products" icon="pencil" href="/products/manage-products">
+    Edit, archive, and control product visibility
+  </Card>
+</CardGroup>

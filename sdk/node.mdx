@@ -1,0 +1,215 @@
+---
+title: Node.js SDK
+description: "Server-side SDK for session tokens, customer management, and webhook verification. Requires Node.js ≥18."
+---
+
+## Installation
+
+```bash
+npm install @billingos/node
+```
+
+**Requirements:**
+- Node.js ≥ 18.0.0
+- Your `BILLINGOS_SECRET_KEY` from the dashboard (Settings → API Keys)
+
+---
+
+## Initializing the Client
+
+```typescript
+import { BillingOS } from '@billingos/node';
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+```
+
+### BillingOSConfig
+
+| Option | Type | Description |
+|---|---|---|
+| `secretKey` | `string` | Your secret API key — **never expose this client-side** |
+
+---
+
+## Session Tokens
+
+Session tokens are short-lived credentials that authorize a specific user for the BillingOS frontend SDK. Generate them server-side and pass them to `BillingOSProvider`.
+
+```typescript
+const { sessionToken, expiresAt } = await billing.createSessionToken({
+  externalUserId: 'user_123',  // your internal user ID
+  expiresIn: 3600,             // seconds (optional, default: 3600)
+});
+```
+
+### CreateSessionTokenInput
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `externalUserId` | `string` | ✅ | Your application's user ID |
+| `expiresIn` | `number` | — | Token lifetime in seconds (default: 3600) |
+
+### SessionTokenResponse
+
+| Field | Type | Description |
+|---|---|---|
+| `sessionToken` | `string` | JWT to pass to `BillingOSProvider` |
+| `expiresAt` | `string` | ISO 8601 timestamp when the token expires |
+
+### Next.js App Router Example
+
+```typescript app/api/billing-token/route.ts
+import { BillingOS } from '@billingos/node';
+import { auth } from '@/lib/auth'; // your auth helper
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
+  const { sessionToken, expiresAt } = await billing.createSessionToken({
+    externalUserId: session.user.id,
+    expiresIn: 3600,
+  });
+
+  return Response.json({ sessionToken, expiresAt });
+}
+```
+
+---
+
+## Customers
+
+Manage customer records programmatically.
+
+```typescript
+// Create a customer
+const customer = await billing.customers.create({
+  externalUserId: 'user_123',
+  email: 'jane@example.com',
+  name: 'Jane Smith',
+});
+
+// Update a customer
+await billing.customers.update('cust_abc', {
+  name: 'Jane Doe',
+});
+```
+
+### Customer Object
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | BillingOS customer ID |
+| `externalUserId` | `string` | Your app's user ID |
+| `email` | `string` | Customer email |
+| `name` | `string` | Customer display name |
+| `stripeCustomerId` | `string` | Linked Stripe customer ID |
+| `createdAt` | `string` | ISO 8601 creation timestamp |
+
+---
+
+## Subscriptions
+
+```typescript
+// List subscriptions for a customer
+const subscriptions = await billing.subscriptions.list({
+  customerId: 'cust_abc',
+});
+
+// Get a single subscription
+const sub = await billing.subscriptions.get('sub_xyz');
+```
+
+### Subscription Object
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Subscription ID |
+| `status` | `string` | `active`, `past_due`, `canceled`, `trialing` |
+| `currentPeriodStart` | `string` | ISO 8601 |
+| `currentPeriodEnd` | `string` | ISO 8601 |
+| `productId` | `string` | BillingOS product ID |
+
+---
+
+## Webhook Verification
+
+Verify incoming Stripe webhooks to ensure they're authentic before processing.
+
+```typescript
+import { BillingOS } from '@billingos/node';
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+
+// Express example
+app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), (req, res) => {
+  const signature = req.headers['stripe-signature'] as string;
+
+  const result = billing.webhooks.verify({
+    payload: req.body,
+    signature,
+    secret: process.env.STRIPE_WEBHOOK_SECRET!,
+  });
+
+  if (!result.valid) {
+    return res.status(400).send('Invalid signature');
+  }
+
+  const event: WebhookEvent = result.event;
+
+  switch (event.type) {
+    case 'subscription.created':
+      // provision access
+      break;
+    case 'subscription.canceled':
+      // revoke access
+      break;
+  }
+
+  res.json({ received: true });
+});
+```
+
+---
+
+## Error Handling
+
+All `@billingos/node` methods throw typed errors you can catch:
+
+```typescript
+import { BillingOS, AuthenticationError, NotFoundError, RateLimitError } from '@billingos/node';
+
+try {
+  const token = await billing.createSessionToken({ externalUserId: 'user_123' });
+} catch (err) {
+  if (err instanceof AuthenticationError) {
+    console.error('Invalid API key');
+  } else if (err instanceof RateLimitError) {
+    console.error('Rate limited — back off and retry');
+  } else if (err instanceof NotFoundError) {
+    console.error('Resource not found');
+  }
+}
+```
+
+### Error Classes
+
+| Class | HTTP Status | Description |
+|---|---|---|
+| `AuthenticationError` | 401 | Invalid or missing API key |
+| `AuthorizationError` | 403 | Key lacks permission for this resource |
+| `NotFoundError` | 404 | Resource does not exist |
+| `ValidationError` | 422 | Invalid input parameters |
+| `RateLimitError` | 429 | Too many requests |
+| `ServerError` | 5xx | BillingOS server error |
+| `NetworkError` | — | Network or connectivity failure |

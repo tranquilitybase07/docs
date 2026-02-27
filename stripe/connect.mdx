@@ -1,0 +1,80 @@
+---
+title: Stripe Connect
+description: "Connect your Stripe account to BillingOS to start processing payments and managing subscriptions."
+---
+
+## Why Stripe Connect?
+
+BillingOS uses **Stripe Connect** to handle payments on your behalf. With this model:
+
+- Customers pay you directly via Stripe (no BillingOS middleman)
+- Payouts go straight to your bank account
+- BillingOS charges are separate from your payment volume
+
+---
+
+## Connecting Your Stripe Account
+
+1. In the sidebar, go to **Settings → Stripe Connect**.
+2. Click **Connect Stripe Account**.
+3. You'll be redirected to Stripe's OAuth authorization page.
+4. Log in to your Stripe account (or create one) and click **Connect**.
+5. You're redirected back to BillingOS. Your account will show as **Connected**.
+
+<Note>
+  You can connect a Stripe **test mode** account to try BillingOS without real charges. Switch to a live mode account when you're ready to go live.
+</Note>
+
+---
+
+## Onboarding Flow
+
+After connecting, Stripe may require additional information depending on your account type and country:
+
+- **Business details** — legal name, address, tax ID
+- **Bank account** — for receiving payouts
+- **Identity verification** — Stripe may request ID verification for compliance
+
+Complete this from your [Stripe Dashboard](https://dashboard.stripe.com/settings/account).
+
+---
+
+## Charges and Payouts Status
+
+On the **Settings → Stripe Connect** page, you can see:
+
+| Status | Description |
+|---|---|
+| **Charges Enabled** | Your account can accept payments |
+| **Payouts Enabled** | Stripe can transfer funds to your bank |
+| **Verification Required** | Additional information needed — click through to Stripe to complete |
+| **Restricted** | Account restricted — check your Stripe Dashboard for details |
+
+If **Charges Enabled** is `false`, customers cannot complete checkout until this is resolved in your Stripe account.
+
+---
+
+## Disconnecting Stripe
+
+<Warning>
+  Disconnecting your Stripe account will prevent new checkouts from completing. Existing subscriptions will continue to renew in Stripe, but BillingOS will no longer sync webhook events. Disconnect only if you intend to stop using BillingOS.
+</Warning>
+
+To disconnect:
+1. Go to **Settings → Stripe Connect**.
+2. Click **Disconnect**.
+3. Confirm the action.
+
+---
+
+## Using Stripe Test Mode
+
+To run BillingOS in test mode:
+
+1. Connect a Stripe **test mode** account (use a different Stripe account or toggle test mode in Stripe Dashboard).
+2. Use Stripe's test card numbers in checkout, e.g.:
+   - `4242 4242 4242 4242` — succeeds immediately
+   - `4000 0025 0000 3155` — requires 3D Secure authentication
+   - `4000 0000 0000 9995` — payment fails
+
+3. All analytics and subscription records created in test mode are isolated from live data.

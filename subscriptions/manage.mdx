@@ -1,0 +1,76 @@
+---
+title: Manage Subscriptions
+description: "Upgrade, downgrade, cancel, and view subscriptions from the BillingOS dashboard."
+---
+
+## Viewing Subscriptions
+
+Navigate to **Subscriptions** in the sidebar to see all subscriptions across every customer in your organization. You can filter by:
+
+- **Status** — `active`, `trialing`, `past_due`, `canceled`
+- **Customer** — search by email or name
+- **Product** — filter by plan
+
+---
+
+## Upgrading or Downgrading
+
+When a customer wants to change plans:
+
+1. Go to **Subscriptions** → find the customer's subscription.
+2. Click **Change Plan**.
+3. Select the new product/plan.
+4. Choose a proration behavior:
+   - **Prorate immediately** — charge or credit the difference for the remaining period
+   - **Apply at renewal** — change takes effect at the next billing cycle
+
+BillingOS calls the Stripe API to update the subscription. The new subscription data is reflected in your frontend via the React Query cache automatically.
+
+---
+
+## Canceling a Subscription
+
+### From the Dashboard
+
+1. Go to the subscription detail page.
+2. Click **Cancel Subscription**.
+3. Choose cancellation timing:
+   - **Immediately** — access ends now, customer may receive a prorated refund
+   - **At period end** — access continues until the end of the current billing period
+
+### From Code (Backend)
+
+```typescript
+import { BillingOS } from '@billingos/node';
+
+const billing = new BillingOS({ secretKey: process.env.BILLINGOS_SECRET_KEY! });
+
+await billing.subscriptions.cancel('sub_xyz', {
+  cancelAtPeriodEnd: true, // cancel gracefully at period end
+});
+```
+
+---
+
+## Handling Past-Due Subscriptions
+
+When a payment fails, the subscription moves to `past_due`. Stripe will automatically retry the payment according to your [Stripe retry settings](https://dashboard.stripe.com/settings/billing/automatic).
+
+**Recommended approach:**
+- Display a banner or email when `status === 'past_due'` prompting the customer to update their payment method.
+- The customer portal (accessible via BillingOS dashboard) lets customers manage their payment methods directly.
+
+---
+
+## Subscription Events (Webhooks)
+
+| Event | Description |
+|---|---|
+| `subscription.created` | New subscription started |
+| `subscription.updated` | Plan changed or trial ended |
+| `subscription.canceled` | Subscription is canceled |
+| `subscription.past_due` | Payment failed |
+| `invoice.paid` | Renewal succeeded |
+| `invoice.payment_failed` | Renewal failed |
+
+Handle these in your backend using the [Node.js SDK webhook verification](/sdk/node#webhook-verification).

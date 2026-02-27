@@ -1,0 +1,75 @@
+---
+title: Analytics
+description: "Track MRR, revenue trends, and active subscriptions from the BillingOS dashboard."
+---
+
+## Analytics Overview
+
+The BillingOS **Analytics** dashboard gives you a real-time view of your subscription business health. Navigate to **Analytics** in the sidebar to access all metrics.
+
+---
+
+## Key Metrics
+
+### Monthly Recurring Revenue (MRR)
+
+**MRR** is the normalized monthly revenue from all active subscriptions. BillingOS calculates it as:
+
+- Monthly subscriptions: counted at face value
+- Annual subscriptions: divided by 12 to get a monthly equivalent
+
+```
+MRR = Σ (active monthly subscriptions) + Σ (active annual subscriptions / 12)
+```
+
+### Total Revenue
+
+**Total Revenue** is the cumulative amount charged to customers across all time — including one-time purchases and all successful subscription renewals.
+
+### Active Subscriptions
+
+The count of subscriptions currently in `active` or `trialing` status.
+
+---
+
+## Revenue Trends
+
+The **Revenue Trend** chart shows revenue over the past 30 days (or your selected period). Each data point represents the sum of successful charges on that day.
+
+This is useful for spotting:
+- Day-of-week patterns
+- Campaign-driven spikes
+- Churn events (drops)
+
+---
+
+## MRR Trend
+
+The **MRR Trend** chart tracks how your normalized monthly revenue grows or shrinks over time. Key events reflected in the chart:
+
+| Event | MRR Impact |
+|---|---|
+| New subscription | MRR increases |
+| Subscription canceled | MRR decreases |
+| Upgrade to higher plan | MRR increases |
+| Downgrade to lower plan | MRR decreases |
+
+---
+
+## Active Subscriptions Trend
+
+Shows the count of active subscribers over time. Use this to identify churn spikes or growth acceleration.
+
+---
+
+## How Analytics Are Calculated
+
+BillingOS derives analytics from:
+
+1. **Stripe webhook events** — `invoice.paid`, `subscription.canceled`, `subscription.updated` are processed in real-time.
+2. **Subscription records** — the current period prices and intervals are used for MRR calculation.
+3. **Charge history** — all successful Stripe charges contribute to Total Revenue.
+
+<Note>
+  Analytics reflect data from the moment your Stripe account was connected to BillingOS. Historical revenue from before the connection date will not appear.
+</Note>

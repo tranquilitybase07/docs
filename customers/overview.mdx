@@ -1,0 +1,78 @@
+---
+title: Customers
+description: "BillingOS customers represent the people or organizations that subscribe to your products."
+---
+
+## What is a Customer?
+
+A **customer** in BillingOS maps to one of your application's users. When a user completes checkout for the first time, BillingOS automatically creates a customer record and links it to a Stripe customer — so you don't need to manage Stripe customer IDs directly.
+
+---
+
+## Customer Data
+
+| Field | Description |
+|---|---|
+| `id` | BillingOS customer ID (e.g. `cust_abc123`) |
+| `externalUserId` | Your application's user ID — the link between your auth system and BillingOS |
+| `email` | Customer's email address |
+| `name` | Customer's display name |
+| `stripeCustomerId` | Linked Stripe customer ID — used for payment methods and invoices |
+| `createdAt` | When the customer record was first created |
+
+---
+
+## How Customers Are Created
+
+Customers are upserted automatically when:
+
+1. A user completes a checkout session (BillingOS creates or finds a matching customer record using `externalUserId`).
+2. You explicitly create one via the [Node.js SDK](/sdk/node#customers):
+
+```typescript
+const customer = await billing.customers.create({
+  externalUserId: 'user_123',
+  email: 'jane@example.com',
+  name: 'Jane Smith',
+});
+```
+
+If a customer with the same `externalUserId` already exists, the record is updated (upsert behavior).
+
+---
+
+## Customer Portal
+
+Each customer has access to a **self-service Customer Portal** where they can:
+
+- View active subscriptions and billing history
+- Update payment methods
+- Download invoices
+- Cancel subscriptions
+
+The portal is powered by Stripe's hosted portal. To open it, redirect the customer to the portal URL, which you can generate from the BillingOS dashboard or API.
+
+---
+
+## Viewing Customers in the Dashboard
+
+Navigate to **Customers** in the sidebar to see all customers in your organization. For each customer you can view:
+
+- Profile (name, email, Stripe ID)
+- Active and past subscriptions
+- Total revenue contributed
+- Invoice history
+
+---
+
+## Linking Customers to Your Auth System
+
+Pass your internal user ID as `externalUserId` when generating a session token or creating a customer. BillingOS uses this to tie billing data back to your user account:
+
+```typescript
+const { sessionToken } = await billing.createSessionToken({
+  externalUserId: req.user.id, // your auth system's user ID
+});
+```
+
+This ensures that when the same user logs in again, BillingOS finds their existing customer record and subscriptions.

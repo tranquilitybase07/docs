@@ -1,33 +1,89 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: API Reference
+description: "REST API reference for BillingOS — authenticate with your API key."
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Base URL
 
-## Welcome
-
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+```
+https://api.billingos.io/v1
+```
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All API requests require a Bearer token in the `Authorization` header:
+
+```bash
+Authorization: Bearer YOUR_BILLINGOS_SECRET_KEY
+```
+
+Generate API keys from **Settings → API Keys** in the dashboard. See [API Keys](/api-keys/overview) for best practices.
+
+---
+
+## Quick Examples
+
+### Create a Session Token
+
+```bash
+curl -X POST https://api.billingos.io/v1/auth/session-token \
+  -H "Authorization: Bearer $BILLINGOS_SECRET_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "externalUserId": "user_123", "expiresIn": 3600 }'
+```
+
+Response:
+```json
+{
+  "sessionToken": "eyJhbGci...",
+  "expiresAt": "2026-02-27T20:00:00Z"
+}
+```
+
+### List Subscriptions
+
+```bash
+curl https://api.billingos.io/v1/subscriptions \
+  -H "Authorization: Bearer $BILLINGOS_SECRET_KEY"
+```
+
+### Get a Customer
+
+```bash
+curl https://api.billingos.io/v1/customers/cust_abc123 \
+  -H "Authorization: Bearer $BILLINGOS_SECRET_KEY"
+```
+
+---
+
+## Error Responses
+
+All errors follow a consistent format:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "statusCode": 401,
+  "error": "Unauthorized",
+  "message": "Invalid or expired API key"
+}
 ```
+
+| Status | Meaning |
+|---|---|
+| `400` | Bad request — check your request body |
+| `401` | Unauthorized — invalid API key |
+| `403` | Forbidden — key lacks permission |
+| `404` | Resource not found |
+| `422` | Validation error — invalid input |
+| `429` | Rate limited — back off and retry |
+| `5xx` | BillingOS server error |
+
+---
+
+## Rate Limits
+
+API requests are rate-limited per API key. If you exceed the limit, you'll receive a `429 Too Many Requests` response. Implement exponential backoff in your retry logic.
+
+<Note>
+  For server-to-server integrations, use the [Node.js SDK](/sdk/node) instead of calling the REST API directly — it handles authentication, error handling, and retries for you.
+</Note>

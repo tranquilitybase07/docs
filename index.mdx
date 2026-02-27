@@ -1,97 +1,73 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: Introduction
+description: "BillingOS is a complete billing infrastructure for SaaS — products, subscriptions, checkout, and analytics in one platform."
 ---
 
-## Setting up
+## What is BillingOS?
 
-Get your documentation site up and running in minutes.
+BillingOS is the billing layer for your SaaS product. It lets you define products and pricing, accept recurring payments through Stripe, manage customer subscriptions, and monitor revenue — all from a single dashboard with a clean SDK for your frontend and backend.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Go from zero to a working checkout in under 10 minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="React SDK" icon="react" href="/sdk/react">
+    Drop-in components: `BillingOSProvider`, `PricingTable`, and `CheckoutModal`.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Node.js SDK" icon="node-js" href="/sdk/node">
+    Server-side session tokens, customer management, and webhook verification.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Stripe Connect" icon="stripe" href="/stripe/connect">
+    Connect your Stripe account and start collecting payments in minutes.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Core Concepts
 
-Everything you need to create world-class documentation.
+| Concept | Description |
+|---|---|
+| **Organization** | Your top-level workspace. All products, customers, and revenue belong to one org. |
+| **Product** | A billable item you sell — one-time, recurring, or usage-based. |
+| **Subscription** | A customer's active relationship with a recurring product. |
+| **Checkout Session** | A secure, Stripe-powered payment flow initiated for a specific product. |
+| **Customer** | A buyer in your system, linked to a Stripe customer record. |
+| **API Key** | A secret key used to authenticate SDK and API calls from your backend. |
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Architecture
 
-## Need inspiration?
+BillingOS is built on:
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+- **Next.js** — Frontend dashboard and the embedded checkout iframe
+- **NestJS** — Backend REST API and webhook handler
+- **Supabase** — Postgres database and auth
+- **Stripe** — Payment processing via Connected Accounts
+
+Your application integrates with BillingOS through the **React SDK** (`@billingos/sdk`) and the **Node.js SDK** (`@billingos/node`). Your users interact with the hosted checkout iframe — meaning card data never touches your servers, keeping you PCI-compliant out of the box.
+
+```
+Your App                    BillingOS
+─────────           ──────────────────────────
+React frontend  →   BillingOSProvider
+                    PricingTable / CheckoutModal
+                    ↕ iframe (PCI-compliant checkout)
+Node backend    →   @billingos/node
+                    createSessionToken()
+                    verifyWebhook()
+```
+
+## Next Steps
+
+<Steps>
+  <Step title="Connect Stripe">
+    Go to **Settings → Stripe Connect** and link your Stripe account. [Learn more →](/stripe/connect)
+  </Step>
+  <Step title="Create a Product">
+    Define your pricing — monthly, annual, one-time, or usage-based. [Learn more →](/products/create-product)
+  </Step>
+  <Step title="Add the SDK">
+    Install `@billingos/sdk` and drop `PricingTable` into your pricing page. [Learn more →](/sdk/react)
+  </Step>
+  <Step title="Go live">
+    Share your checkout link or embed the pricing table. Subscriptions and payments are handled automatically.
+  </Step>
+</Steps>

@@ -1,0 +1,113 @@
+---
+title: Checkout
+description: "How BillingOS handles payment collection through a secure, iframe-based Stripe checkout."
+---
+
+## How Checkout Works
+
+BillingOS uses an **iframe-based checkout** to collect payments. When a customer clicks a plan in your `PricingTable` (or you call `checkout.open()` programmatically), BillingOS:
+
+1. Creates a **Checkout Session** on the BillingOS backend.
+2. Loads the BillingOS payment page inside a sandboxed `<iframe>`.
+3. The customer enters card details inside the iframe — **card data never touches your servers**.
+4. On successful payment, Stripe fires a webhook → BillingOS creates the subscription → notifies your frontend.
+
+This approach is PCI-compliant out of the box with zero extra configuration.
+
+---
+
+## PricingTable Integration
+
+The simplest integration — just drop in `PricingTable`:
+
+```tsx
+import { PricingTable } from '@billingos/sdk';
+
+<PricingTable useCheckoutModal={true} />
+```
+
+When `useCheckoutModal={true}`, clicking any plan opens the iframe checkout modal automatically.
+
+---
+
+## Programmatic Checkout
+
+Trigger checkout from a custom button using the `useCheckout` hook:
+
+```tsx
+import { useCheckout, CheckoutModal } from '@billingos/sdk';
+
+function UpgradeButton({ productId }: { productId: string }) {
+  const { open, close, isOpen } = useCheckout();
+
+  return (
+    <>
+      <button onClick={() => open({ productId })}>Upgrade to Pro</button>
+      <CheckoutModal isOpen={isOpen} onClose={close} />
+    </>
+  );
+}
+```
+
+---
+
+## Direct Checkout Links
+
+Every product has a unique, shareable checkout URL. You can:
+
+- Copy it from the product dashboard page
+- Share it directly via email campaigns or landing pages
+- Embed it as a plain `<a>` link
+
+Customers who visit the link land on a hosted BillingOS checkout page — no SDK required on your end.
+
+---
+
+## Customer Prefill
+
+Pass `customerEmail` and `customerName` to `BillingOSProvider` and the checkout form will be pre-populated for logged-in users:
+
+```tsx
+<BillingOSProvider
+  apiUrl="..."
+  sessionToken={sessionToken}
+  customerEmail={user.email}
+  customerName={user.name}
+>
+  <App />
+</BillingOSProvider>
+```
+
+---
+
+## After Payment: What Happens?
+
+1. **Stripe processes the charge** and fires a `checkout.session.completed` webhook.
+2. **BillingOS backend** receives the webhook, verifies the signature, and creates the subscription record.
+3. **Frontend polls** briefly for the new subscription data (up to 10 seconds).
+4. **React Query cache** is invalidated → your UI refreshes with the active subscription instantly.
+5. A **success notification** is displayed to the customer inside the modal.
+
+---
+
+## Checkout Session Object
+
+| Field | Description |
+|---|---|
+| `id` | Unique session ID (e.g. `session_abc123`) |
+| `productId` | The product being purchased |
+| `customerId` | BillingOS customer ID |
+| `status` | `pending`, `complete`, `expired` |
+| `subscription` | Subscription data once payment is complete |
+| `stripeSessionId` | Linked Stripe checkout session ID |
+
+---
+
+## Security
+
+The checkout iframe uses `sandbox` attributes to restrict the embedded content:
+- No top-level navigation
+- No form submissions outside the iframe
+- Cross-origin isolation for card data
+
+The checkout URL is scoped to the session ID and expires after 24 hours.

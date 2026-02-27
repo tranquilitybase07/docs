@@ -1,0 +1,98 @@
+---
+title: Create a Product
+description: "Add a new product or plan to your BillingOS catalog from the dashboard."
+---
+
+## Step 1: Open Products
+
+In the sidebar, go to **Products** and click **New Product** in the top-right corner.
+
+---
+
+## Step 2: Fill in Basic Details
+
+| Field | Notes |
+|---|---|
+| **Name** | Shown on the pricing card, e.g. "Pro", "Starter", "Enterprise" |
+| **Description** | 1–2 sentences describing what the plan includes |
+
+---
+
+## Step 3: Choose a Pricing Model
+
+<AccordionGroup>
+  <Accordion title="Free">
+    Select **Free** if you want to offer a no-cost tier. No Stripe payment is required at checkout, but a subscription record is still created so you can manage access programmatically.
+  </Accordion>
+  <Accordion title="One-time">
+    Charge a single, non-recurring payment. Good for lifetime deals or individual add-ons.
+
+    - Enter the **Price** and **Currency**.
+    - No billing interval needed.
+  </Accordion>
+  <Accordion title="Recurring — Monthly / Annual">
+    Charge on a repeating schedule.
+
+    - **Price** — amount per period
+    - **Billing Interval** — `month` or `year`
+    - **Trial Days** — (optional) number of days before the first charge
+  </Accordion>
+  <Accordion title="Metered (Usage-based)">
+    Bill customers based on reported usage. You report usage events to BillingOS/Stripe; the customer is billed at the end of each period.
+
+    - Set a **Unit Price** (price per unit of usage)
+    - Report usage from your backend via the Stripe API
+  </Accordion>
+  <Accordion title="Seat-based">
+    Price scales with the number of seats (users). Set a **Price per Seat** and let your customers add users — their subscription amount adjusts automatically.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Step 4: Add Features
+
+Click **Add Feature** to define the bullet points shown on the pricing card. Good features are short and outcome-focused:
+
+```
+✓ Unlimited API calls
+✓ 5 team seats
+✓ Priority support
+✓ Custom domain
+```
+
+---
+
+## Step 5: Add Media (Optional)
+
+Upload a product image or icon. This appears in the pricing card header and the checkout modal. Recommended size: **400×200px**, PNG or SVG.
+
+---
+
+## Step 6: Set Visibility
+
+Toggle **Show in Pricing Table** to control whether this product appears publicly. Hidden products can still be linked directly via a checkout URL.
+
+---
+
+## Step 7: Save
+
+Click **Save Product**. BillingOS will:
+
+1. Create or update the product in Stripe.
+2. Sync the Stripe price ID back to the BillingOS database.
+3. Make the product available via the `PricingTable` component immediately.
+
+<Note>
+  If Stripe is not yet connected, you'll be prompted to [connect your Stripe account](/stripe/connect) before the product can be saved.
+</Note>
+
+---
+
+## Sharing a Direct Checkout Link
+
+Every product has a unique checkout link you can share directly:
+
+1. Open the product in the dashboard.
+2. Click **Copy Checkout Link**.
+3. Share the link — customers can purchase without ever visiting your pricing page.
