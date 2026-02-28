@@ -70,7 +70,7 @@ Use my existing User model which has a subscriptionStatus field.
 Using @billingos/node, write a utility function that checks 
 if a user has an active BillingOS subscription. It should:
 - Take a userId string
-- Call billing.subscriptions.list({ customerId })
+- Call billing.listSubscriptions({ customer_id: customerId })
 - Return true if any subscription has status 'active' or 'trialing'
 ```
 

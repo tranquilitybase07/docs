@@ -45,9 +45,7 @@ import { BillingOS } from '@billingos/node';
 
 const billing = new BillingOS({ secretKey: process.env.BILLINGOS_SECRET_KEY! });
 
-await billing.subscriptions.cancel('sub_xyz', {
-  cancelAtPeriodEnd: true, // cancel gracefully at period end
-});
+await billing.cancelSubscription('sub_xyz');
 ```
 
 ---

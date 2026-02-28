@@ -35,15 +35,16 @@ When `useCheckoutModal={true}`, clicking any plan opens the iframe checkout moda
 Trigger checkout from a custom button using the `useCheckout` hook:
 
 ```tsx
-import { useCheckout, CheckoutModal } from '@billingos/sdk';
+import { useCheckout } from '@billingos/sdk';
 
 function UpgradeButton({ productId }: { productId: string }) {
-  const { open, close, isOpen } = useCheckout();
+  const { openCheckout, closeCheckout, isLoading } = useCheckout();
 
   return (
     <>
-      <button onClick={() => open({ productId })}>Upgrade to Pro</button>
-      <CheckoutModal isOpen={isOpen} onClose={close} />
+      <button onClick={() => openCheckout({ productId })} disabled={isLoading}>
+        {isLoading ? 'Opening...' : 'Upgrade to Pro'}
+      </button>
     </>
   );
 }

@@ -30,7 +30,7 @@ Customers are upserted automatically when:
 2. You explicitly create one via the [Node.js SDK](/sdk/node#customers):
 
 ```typescript
-const customer = await billing.customers.create({
+const customer = await billing.createCustomer({
   externalUserId: 'user_123',
   email: 'jane@example.com',
   name: 'Jane Smith',
