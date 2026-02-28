@@ -1,6 +1,6 @@
 ---
 title: React SDK
-description: "Frontend components and hooks for adding billing UI to your React or Next.js application."
+description: "Frontend components, hooks, and provider for adding billing UI to your React or Next.js application."
 ---
 
 ## Installation
@@ -26,6 +26,7 @@ npm install @billingos/sdk @tanstack/react-query @stripe/react-stripe-js @stripe
 
 ```tsx
 import { BillingOSProvider } from '@billingos/sdk';
+import '@billingos/sdk/styles.css';
 
 <BillingOSProvider
   apiUrl="https://your-billingos-backend.com"
@@ -52,7 +53,9 @@ import { BillingOSProvider } from '@billingos/sdk';
 
 ---
 
-## PricingTable
+## Components
+
+### PricingTable
 
 Renders all active products from your BillingOS catalog as a pricing card grid. Customers can click a plan to open the checkout flow.
 
@@ -62,44 +65,437 @@ import { PricingTable } from '@billingos/sdk';
 <PricingTable useCheckoutModal={true} />
 ```
 
-### Props
-
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `useCheckoutModal` | `boolean` | `false` | Opens an iframe checkout modal instead of redirecting |
 
-When `useCheckoutModal={true}`, clicking any plan fires the secure iframe-based checkout (see [Checkout](/checkout/overview)).
+### CheckoutModal
 
----
-
-## CheckoutModal
-
-For programmatic control, you can trigger the checkout modal directly using the `CheckoutModal` component and the `useCheckout` hook.
+For programmatic control, trigger the checkout modal directly using the `CheckoutModal` component paired with the `useCheckout` hook.
 
 ```tsx
 import { CheckoutModal, useCheckout } from '@billingos/sdk';
 
 function UpgradeButton({ productId }: { productId: string }) {
-  const { open, isOpen, close } = useCheckout();
+  const { openCheckout, closeCheckout, isLoading } = useCheckout();
 
   return (
     <>
-      <button onClick={() => open({ productId })}>Upgrade</button>
-      <CheckoutModal isOpen={isOpen} onClose={close} />
+      <button onClick={() => openCheckout({ productId })} disabled={isLoading}>
+        {isLoading ? 'Opening...' : 'Upgrade'}
+      </button>
+      <CheckoutModal onClose={closeCheckout} />
     </>
   );
 }
 ```
 
+### FeatureGate
+
+Conditionally render content based on whether the current user has access to a feature.
+
+```tsx
+import { FeatureGate } from '@billingos/sdk';
+
+<FeatureGate featureKey="advanced_analytics">
+  <AdvancedAnalyticsDashboard />
+</FeatureGate>
+```
+
+### CustomerPortal
+
+Renders a self-serve portal where customers can manage their subscriptions and payment methods.
+
+```tsx
+import { CustomerPortal } from '@billingos/sdk';
+
+<CustomerPortal />
+```
+
+### UsageDisplay
+
+Displays usage progress for a metered feature.
+
+```tsx
+import { UsageDisplay } from '@billingos/sdk';
+
+<UsageDisplay featureKey="api_calls" />
+```
+
+### PricingTable
+
+Renders upgrade prompts with contextual messaging to drive users toward an upgrade.
+
+```tsx
+import { UpgradePrompt, UpgradeNudge } from '@billingos/sdk';
+
+<UpgradePrompt feature="Advanced Analytics" />
+<UpgradeNudge featureKey="data_export" />
+```
+
 ---
 
-## useCheckout Hook
+## Hooks
 
-| Method | Description |
-|---|---|
-| `open({ productId })` | Opens the checkout modal for a given product |
-| `close()` | Closes the modal |
-| `isOpen` | Boolean — whether the modal is currently visible |
+### `useCheckout`
+
+Opens or closes the checkout modal programmatically.
+
+```tsx
+import { useCheckout } from '@billingos/sdk';
+
+function UpgradeButton() {
+  const { openCheckout, closeCheckout, isLoading, error } = useCheckout();
+
+  return (
+    <button onClick={() => openCheckout({ productId: 'prod_abc123' })} disabled={isLoading}>
+      Upgrade
+    </button>
+  );
+}
+```
+
+| Return | Type | Description |
+|---|---|---|
+| `openCheckout(options)` | `(options) => Promise<CheckoutResult>` | Opens the checkout modal |
+| `closeCheckout()` | `() => void` | Closes the modal |
+| `isLoading` | `boolean` | Whether checkout is currently opening |
+| `error` | `Error \| null` | Any error that occurred |
+
+---
+
+### Subscription Hooks
+
+#### `useSubscription(id, options?)`
+
+Fetch a single subscription by ID.
+
+```tsx
+const { data: subscription, isLoading, error } = useSubscription('sub_123');
+```
+
+#### `useSubscriptions(params?, options?)`
+
+List subscriptions with optional filtering and pagination.
+
+```tsx
+const { data, isLoading } = useSubscriptions({
+  customer_id: 'cus_123',
+  page: 1,
+  page_size: 10
+});
+
+// data.data — array of subscriptions
+// data.meta.total — total count
+```
+
+#### `useCreateSubscription(options?)`
+
+Create a new subscription.
+
+```tsx
+const createSubscription = useCreateSubscription({
+  onSuccess: (subscription) => console.log('Created:', subscription.id),
+});
+
+createSubscription.mutate({
+  customer_id: 'cus_123',
+  price_id: 'price_pro_plan',
+  trial_days: 14,
+});
+```
+
+#### `useUpdateSubscription(subscriptionId, options?)`
+
+Update an existing subscription (upgrade/downgrade).
+
+```tsx
+const updateSubscription = useUpdateSubscription('sub_123');
+
+updateSubscription.mutate({ price_id: 'price_enterprise_plan' });
+```
+
+#### `useCancelSubscription(subscriptionId, options?)`
+
+Cancel a subscription immediately or at period end.
+
+```tsx
+const cancelSubscription = useCancelSubscription('sub_123');
+
+// Cancel at period end
+cancelSubscription.mutate({ immediately: false });
+
+// Cancel immediately
+cancelSubscription.mutate({ immediately: true });
+```
+
+#### `useReactivateSubscription(subscriptionId, options?)`
+
+Reactivate a canceled subscription.
+
+```tsx
+const reactivateSubscription = useReactivateSubscription('sub_123');
+
+reactivateSubscription.mutate();
+```
+
+#### `useSubscriptionPreview(subscriptionId, input, options?)`
+
+Preview the proration and cost of a subscription change before applying it.
+
+```tsx
+const { data: preview } = useSubscriptionPreview('sub_123', {
+  price_id: 'price_pro_plan'
+});
+
+console.log(`Proration: $${preview?.proration_amount / 100}`);
+console.log(`Next invoice: $${preview?.next_invoice_amount / 100}`);
+console.log(`Billing date: ${preview?.next_invoice_date}`);
+```
+
+#### `useAvailablePlans(subscriptionId, options?)`
+
+Fetch available upgrade and downgrade options for a subscription.
+
+```tsx
+const { data } = useAvailablePlans('sub_123');
+
+// data.available_upgrades — array of plans the user can upgrade to
+// data.available_downgrades — array of plans the user can downgrade to
+```
+
+#### `usePreviewPlanChange(options?)`
+
+Preview a plan change with proration details (mutation-based, useful for interactive previews).
+
+```tsx
+const previewChange = usePreviewPlanChange();
+
+const preview = await previewChange.mutateAsync({
+  subscriptionId: 'sub_123',
+  input: { new_price_id: 'price_pro' }
+});
+
+console.log('Proration:', preview.proration.immediate_payment);
+```
+
+#### `useChangePlan(options?)`
+
+Execute a plan change (upgrade or downgrade). Automatically invalidates subscription cache.
+
+```tsx
+const changePlan = useChangePlan({
+  onSuccess: (response) => console.log('Plan changed:', response.subscription.id)
+});
+
+changePlan.mutate({
+  subscriptionId: 'sub_123',
+  input: {
+    new_price_id: 'price_456',
+    confirm_amount: 1999
+  }
+});
+```
+
+---
+
+### Feature & Entitlement Hooks
+
+#### `useFeature(featureKey, options?)`
+
+Check if the current user has access to a feature. Returns full access details including usage and limits.
+
+```tsx
+const { data: feature, isLoading } = useFeature('advanced_analytics');
+
+if (feature?.has_access) {
+  // Show premium feature
+}
+```
+
+| Return field | Type | Description |
+|---|---|---|
+| `feature_key` | `string` | Feature identifier |
+| `has_access` | `boolean` | Whether the user has access |
+| `limit` | `number \| undefined` | Usage quota limit |
+| `usage` | `number \| undefined` | Current usage count |
+
+#### `useFeatureGate(featureKey, options?)`
+
+Extended feature gate that also exposes quota information and callbacks for access denied events.
+
+```tsx
+const {
+  hasAccess,
+  isQuotaExceeded,
+  usage,
+  limit,
+  remaining,
+  isLoading
+} = useFeatureGate('api_calls', {
+  onAccessDenied: () => showUpgradeModal(),
+  onQuotaExceeded: (usage, limit) => showQuotaWarning(usage, limit),
+});
+```
+
+#### `useHasFeature(customerId, featureKey, options?)`
+
+Simplified boolean check for feature access.
+
+```tsx
+const hasAccess = useHasFeature('cus_123', 'advanced_analytics');
+
+if (hasAccess) {
+  // Render premium feature
+}
+```
+
+#### `useCheckEntitlement(customerId, featureKey, options?)`
+
+Check if a specific customer has access to a feature. Returns the full `Entitlement` object.
+
+```tsx
+const { data: entitlement } = useCheckEntitlement('cus_123', 'advanced_analytics');
+
+if (entitlement?.has_access) {
+  // Show premium feature
+}
+```
+
+#### `useEntitlements(customerId, options?)`
+
+Get all entitlements for a customer.
+
+```tsx
+const { data: entitlements } = useEntitlements('cus_123');
+
+entitlements?.map(e => (
+  <div key={e.feature_key}>
+    {e.feature_key}: {e.has_access ? '✓' : '✗'}
+    {e.limit && ` (${e.usage}/${e.limit})`}
+  </div>
+));
+```
+
+#### `useFeatureEntitlements()`
+
+Get all feature entitlements for the currently authenticated user (from session token).
+
+```tsx
+const { data } = useFeatureEntitlements();
+
+data?.entitlements.map(e => (
+  <div key={e.feature_key}>
+    {e.feature_title} — {e.product_name}
+  </div>
+));
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `feature_key` | `string` | Feature identifier |
+| `feature_title` | `string` | Human-readable name |
+| `feature_type` | `'boolean_flag' \| 'usage_quota' \| 'numeric_limit'` | Feature type |
+| `product_name` | `string` | Plan/product it belongs to |
+| `subscription_status` | `string` | Underlying subscription status |
+
+---
+
+### Usage Hooks
+
+#### `useTrackUsage()`
+
+Track a usage event for the current user.
+
+```tsx
+const trackUsage = useTrackUsage();
+
+await makeAPICall();
+
+trackUsage.mutate({
+  featureKey: 'api_calls',
+  quantity: 1,
+  metadata: { endpoint: '/api/data' }
+});
+```
+
+#### `useUsageMetrics(featureKey?)`
+
+Get usage metrics for all features or a specific feature. Refreshes every 30 seconds automatically.
+
+```tsx
+const { data } = useUsageMetrics('api_calls');
+
+data?.metrics.map(metric => (
+  <div key={metric.feature_key}>
+    <p>{metric.feature_title}: {metric.consumed} / {metric.limit}</p>
+    <progress value={metric.percentage_used} max={100} />
+    <p>Resets in {metric.resets_in_days} days</p>
+  </div>
+));
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `consumed` | `number` | Current usage count |
+| `limit` | `number` | Max allowed usage |
+| `remaining` | `number` | Units left before limit |
+| `percentage_used` | `number` | 0–100 |
+| `resets_in_days` | `number` | Days until the billing period resets |
+
+#### `useIsApproachingLimit(customerId, featureKey, threshold?, options?)`
+
+Returns `true` when usage is at or above the given threshold (default: 80%).
+
+```tsx
+const isApproachingLimit = useIsApproachingLimit('cus_123', 'api_calls', 80);
+
+if (isApproachingLimit) {
+  return <Alert>You're approaching your API call limit. Upgrade to increase your quota.</Alert>;
+}
+```
+
+---
+
+### `useSessionToken`
+
+Manages session token lifecycle with automatic fetching and refresh before expiry.
+
+```tsx
+import { useSessionToken } from '@billingos/sdk';
+
+// Auto-fetch from your API endpoint
+const { token, isLoading, isValid, error, refresh } = useSessionToken({
+  tokenUrl: '/api/billing-token',
+  refreshBeforeExpiry: 300, // refresh 5 minutes before expiry
+  autoRefresh: true,
+  onTokenRefresh: (token) => console.log('Token refreshed'),
+  onError: (err) => console.error('Token fetch failed:', err),
+});
+
+// Or provide a manually fetched token
+const { token } = useSessionToken({
+  token: 'bos_session_abc123...',
+});
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `tokenUrl` | `string` | — | Your API route that returns `{ sessionToken, expiresAt }` |
+| `token` | `string` | — | Manually provided session token |
+| `refreshBeforeExpiry` | `number` | `300` | Seconds before expiry to proactively refresh |
+| `autoRefresh` | `boolean` | `true` | Whether to auto-refresh |
+| `onTokenRefresh` | `(token: string) => void` | — | Called when token is refreshed |
+| `onError` | `(error: Error) => void` | — | Called on fetch failure |
+
+| Return | Type | Description |
+|---|---|---|
+| `token` | `string \| null` | Current session token |
+| `expiresAt` | `Date \| null` | Token expiry time |
+| `isLoading` | `boolean` | Whether a fetch is in progress |
+| `isValid` | `boolean` | Whether the token is non-null and not expired |
+| `error` | `Error \| null` | Last fetch error |
+| `refresh` | `() => Promise<void>` | Manually trigger a token refresh |
 
 ---
 

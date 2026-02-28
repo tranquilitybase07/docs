@@ -1,6 +1,6 @@
 ---
 title: Node.js SDK
-description: "Server-side SDK for session tokens, customer management, and webhook verification. Requires Node.js ≥18."
+description: "Server-side SDK for session tokens, customer management, subscriptions, and webhook verification. Requires Node.js ≥18."
 ---
 
 ## Installation
@@ -27,9 +27,12 @@ const billing = new BillingOS({
 
 ### BillingOSConfig
 
-| Option | Type | Description |
-|---|---|---|
-| `secretKey` | `string` | Your secret API key — **never expose this client-side** |
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `secretKey` | `string` | — | Your secret API key — **never expose this client-side**. Must start with `sk_live_` or `sk_test_` |
+| `apiUrl` | `string` | `http://localhost:3001` | Base URL of your BillingOS backend |
+| `timeout` | `number` | `30000` | Request timeout in milliseconds |
+| `maxRetries` | `number` | `3` | Number of automatic retries on transient errors |
 
 ---
 
@@ -39,8 +42,11 @@ Session tokens are short-lived credentials that authorize a specific user for th
 
 ```typescript
 const { sessionToken, expiresAt } = await billing.createSessionToken({
-  externalUserId: 'user_123',  // your internal user ID
-  expiresIn: 3600,             // seconds (optional, default: 3600)
+  externalUserId: 'user_123',            // your internal user ID
+  expiresIn: 3600,                       // seconds (min: 60, max: 86400)
+  externalOrganizationId: 'org_abc',     // optional: scope to an org
+  allowedOperations: ['read', 'write'],  // optional: restrict operations
+  metadata: { plan: 'pro' },            // optional: attach custom data
 });
 ```
 
@@ -49,14 +55,23 @@ const { sessionToken, expiresAt } = await billing.createSessionToken({
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `externalUserId` | `string` | ✅ | Your application's user ID |
-| `expiresIn` | `number` | — | Token lifetime in seconds (default: 3600) |
+| `expiresIn` | `number` | — | Token lifetime in seconds (default: 3600, range: 60–86400) |
+| `externalOrganizationId` | `string` | — | Scopes the token to a specific organization |
+| `allowedOperations` | `string[]` | — | Restrict what operations this token can perform |
+| `metadata` | `object` | — | Custom key-value data attached to the token |
 
 ### SessionTokenResponse
 
 | Field | Type | Description |
 |---|---|---|
 | `sessionToken` | `string` | JWT to pass to `BillingOSProvider` |
-| `expiresAt` | `string` | ISO 8601 timestamp when the token expires |
+| `expiresAt` | `Date` | When the token expires |
+
+### Revoking a Token
+
+```typescript
+await billing.revokeSessionToken('tok_abc123');
+```
 
 ### Next.js App Router Example
 
@@ -91,16 +106,28 @@ Manage customer records programmatically.
 
 ```typescript
 // Create a customer
-const customer = await billing.customers.create({
+const customer = await billing.createCustomer({
   externalUserId: 'user_123',
+  externalOrganizationId: 'org_abc', // optional
   email: 'jane@example.com',
   name: 'Jane Smith',
+  metadata: { tier: 'vip' },
 });
 
+// Get by BillingOS customer ID
+const customer = await billing.getCustomer('cust_abc');
+
+// Get by your internal user ID
+const customer = await billing.getCustomerByExternalId('user_123');
+
 // Update a customer
-await billing.customers.update('cust_abc', {
+await billing.updateCustomer('cust_abc', {
   name: 'Jane Doe',
+  email: 'jane.doe@example.com',
 });
+
+// Delete a customer
+await billing.deleteCustomer('cust_abc');
 ```
 
 ### Customer Object
@@ -119,14 +146,44 @@ await billing.customers.update('cust_abc', {
 ## Subscriptions
 
 ```typescript
-// List subscriptions for a customer
-const subscriptions = await billing.subscriptions.list({
+// Create a subscription
+const subscription = await billing.createSubscription({
   customerId: 'cust_abc',
+  priceId: 'price_123',
+  metadata: { source: 'dashboard' },
 });
 
-// Get a single subscription
-const sub = await billing.subscriptions.get('sub_xyz');
+// Get a subscription by ID
+const sub = await billing.getSubscription('sub_xyz');
+
+// Update a subscription (e.g., plan change)
+await billing.updateSubscription('sub_xyz', {
+  priceId: 'price_456',
+  cancelAtPeriodEnd: false,
+});
+
+// Cancel a subscription
+await billing.cancelSubscription('sub_xyz');
+
+// Reactivate a canceled subscription
+await billing.reactivateSubscription('sub_xyz');
 ```
+
+### CreateSubscriptionInput
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `customerId` | `string` | ✅ | BillingOS customer ID |
+| `priceId` | `string` | ✅ | Price ID to subscribe to |
+| `metadata` | `object` | — | Custom key-value data |
+
+### UpdateSubscriptionInput
+
+| Field | Type | Description |
+|---|---|---|
+| `priceId` | `string` | New price ID (plan change) |
+| `cancelAtPeriodEnd` | `boolean` | Schedule cancellation at period end |
+| `metadata` | `object` | Custom key-value data |
 
 ### Subscription Object
 
@@ -142,7 +199,7 @@ const sub = await billing.subscriptions.get('sub_xyz');
 
 ## Webhook Verification
 
-Verify incoming Stripe webhooks to ensure they're authentic before processing.
+Verify incoming webhooks to ensure they're authentic before processing.
 
 ```typescript
 import { BillingOS } from '@billingos/node';
@@ -152,20 +209,16 @@ const billing = new BillingOS({
 });
 
 // Express example
-app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), (req, res) => {
-  const signature = req.headers['stripe-signature'] as string;
+app.post('/webhooks/billing', express.raw({ type: 'application/json' }), (req, res) => {
+  const signature = req.headers['billingos-signature'] as string;
 
-  const result = billing.webhooks.verify({
-    payload: req.body,
-    signature,
-    secret: process.env.STRIPE_WEBHOOK_SECRET!,
-  });
+  const isValid = billing.verifyWebhook(req.body, signature);
 
-  if (!result.valid) {
+  if (!isValid) {
     return res.status(400).send('Invalid signature');
   }
 
-  const event: WebhookEvent = result.event;
+  const event = JSON.parse(req.body);
 
   switch (event.type) {
     case 'subscription.created':
@@ -184,20 +237,37 @@ app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), (req, re
 
 ## Error Handling
 
-All `@billingos/node` methods throw typed errors you can catch:
+All `@billingos/node` methods throw typed errors you can catch and handle specifically:
 
 ```typescript
-import { BillingOS, AuthenticationError, NotFoundError, RateLimitError } from '@billingos/node';
+import {
+  BillingOS,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  ValidationError,
+  RateLimitError,
+  ServerError,
+  NetworkError,
+} from '@billingos/node';
 
 try {
   const token = await billing.createSessionToken({ externalUserId: 'user_123' });
 } catch (err) {
   if (err instanceof AuthenticationError) {
     console.error('Invalid API key');
+  } else if (err instanceof AuthorizationError) {
+    console.error('Key lacks permission');
   } else if (err instanceof RateLimitError) {
     console.error('Rate limited — back off and retry');
   } else if (err instanceof NotFoundError) {
     console.error('Resource not found');
+  } else if (err instanceof ValidationError) {
+    console.error('Invalid input:', err.message);
+  } else if (err instanceof ServerError) {
+    console.error('BillingOS server error');
+  } else if (err instanceof NetworkError) {
+    console.error('Network failure');
   }
 }
 ```
