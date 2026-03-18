@@ -1,5 +1,5 @@
 ---
-title: Session Tokens
+title: Session tokens
 description: Create and manage session tokens for authenticating customers.
 icon: key
 ---
@@ -19,17 +19,39 @@ const { sessionToken, expiresAt } = await billing.createSessionToken({
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `externalUserId` | `string` | Yes | Your user's unique ID |
-| `expiresIn` | `number` | No | Token lifetime in seconds (default: 3600) |
+| `externalUserId` | `string` | Yes | Your user's unique ID from your database |
+| `externalOrganizationId` | `string` | No | Organization ID for B2B scenarios |
+| `expiresIn` | `number` | No | Token lifetime in seconds (60–86400, default: 3600) |
+| `allowedOperations` | `string[]` | No | Scope the token to specific operations |
+| `metadata` | `Record<string, any>` | No | Additional metadata (IP, user agent, etc.) |
 
 ### Response
 
 ```typescript
 {
-  sessionToken: "bos_session_abc123...",
-  expiresAt: "2025-01-15T12:00:00Z"
+  sessionToken: "bos_session_test_abc123...",
+  expiresAt: Date  // Token expiration timestamp
 }
 ```
+
+## revokeSessionToken
+
+Revoke a previously created session token.
+
+```typescript
+await billing.revokeSessionToken("token_id_here");
+```
+
+## Token format
+
+Session tokens are prefixed based on your API key environment:
+
+| API key | Token prefix | Routes to |
+|---------|-------------|-----------|
+| `sk_test_*` | `bos_session_test_*` | Sandbox API |
+| `sk_live_*` | `bos_session_live_*` | Production API |
+
+The React SDK reads this prefix and routes requests to the correct API automatically.
 
 ## Next.js example
 
@@ -57,11 +79,10 @@ export async function GET() {
 }
 ```
 
-## Token format
-
-Session tokens follow this format: `bos_session_{payload}.{signature}`
+## Security notes
 
 - Tokens are short-lived (default: 1 hour)
 - Each token is scoped to a single customer
 - Tokens are verified on every API call
 - Expired tokens are automatically rejected
+- **Always authenticate the user** before creating a token

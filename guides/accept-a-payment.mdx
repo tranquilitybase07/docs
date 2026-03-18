@@ -1,23 +1,35 @@
 ---
-title: Accept a Payment
+title: Accept a payment
 description: Process your first payment using the checkout modal or the checkout API.
 icon: credit-card
 ---
+
+A smooth checkout experience directly impacts your conversion rate. BillingOS gives you a PCI-compliant checkout modal that handles card collection, 3D Secure, and subscription creation — all without touching Stripe directly.
 
 ## Two ways to accept payments
 
 | Approach | Best for | Effort |
 |----------|----------|--------|
-| **Checkout Modal** (recommended) | Most apps — drop-in, PCI-compliant, handles everything | 3 lines of code |
+| **Checkout modal** (recommended) | Most apps — drop-in, PCI-compliant, handles everything | 3 lines of code |
 | **Checkout API** | Custom flows where you need full control | More code, more flexibility |
 
-## Checkout Modal
+## Checkout modal
 
 The `CheckoutModal` renders a secure iframe-based checkout. Card data never touches your servers.
 
 ### With PricingTable (easiest)
 
-If you're using the `PricingTable` component, just set `useCheckoutModal={true}` — the modal opens automatically when a user selects a plan. See [Show a Pricing Page](/guides/show-a-pricing-page) for details.
+The `PricingTable` component opens the checkout modal automatically when a user selects a plan — no extra code needed:
+
+```tsx
+<PricingTable
+  onPlanChanged={(subscription) => {
+    console.log("Subscribed!", subscription);
+  }}
+/>
+```
+
+See [Show a pricing page](/guides/show-a-pricing-page) for full customization options.
 
 ### Standalone checkout modal
 
@@ -52,22 +64,7 @@ export default function UpgradeButton() {
 }
 ```
 
-### Checkout modal options
-
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `open` | `boolean` | Yes | Whether the modal is visible |
-| `onOpenChange` | `(open: boolean) => void` | Yes | Called when the modal should open/close |
-| `priceId` | `string` | Yes | The price to charge |
-| `onSuccess` | `(subscription: any) => void` | Yes | Called after successful payment |
-| `customer` | `{ email?, name?, taxId? }` | No | Prefill customer info |
-| `couponCode` | `string` | No | Apply a discount code |
-| `theme` | `"light" \| "dark" \| "auto"` | No | Color theme |
-| `onError` | `(error: Error) => void` | No | Called if payment fails |
-| `onCancel` | `() => void` | No | Called if user closes the modal |
-| `existingSubscriptionId` | `string` | No | For upgrades/downgrades |
-| `metadata` | `Record<string, string>` | No | Custom data attached to the subscription |
-| `debug` | `boolean` | No | Enable debug logging |
+![Checkout modal](/images/checkout-modal.png)
 
 ### Prefill customer information
 
@@ -85,6 +82,44 @@ Skip the email step by passing customer data:
   onSuccess={handleSuccess}
 />
 ```
+
+### Handle events
+
+```tsx
+<CheckoutModal
+  open={open}
+  onOpenChange={setOpen}
+  priceId="price_pro_monthly"
+  onSuccess={(subscription) => {
+    toast.success("Welcome to Pro!");
+    router.push("/dashboard");
+  }}
+  onError={(error) => {
+    toast.error(`Payment failed: ${error.message}`);
+  }}
+  onCancel={() => {
+    console.log("User closed checkout");
+  }}
+/>
+```
+
+### Adaptive pricing
+
+Enable localized pricing based on the customer's location:
+
+```tsx
+<CheckoutModal
+  open={open}
+  onOpenChange={setOpen}
+  priceId="price_pro_monthly"
+  adaptivePricing={true}
+  onSuccess={handleSuccess}
+/>
+```
+
+<Info>
+  The checkout modal runs in a secure iframe. Card details are handled entirely by Stripe — your app never processes or stores payment information. This means you're PCI-compliant by default.
+</Info>
 
 ## Checkout API
 
@@ -113,6 +148,19 @@ export default function CustomCheckout() {
     </button>
   );
 }
+```
+
+### Imperative API
+
+You can also open checkout programmatically from anywhere in your app:
+
+```typescript
+window.billingOS?.checkout.open({
+  priceId: "price_pro_monthly",
+  onSuccess: (subscription) => {
+    console.log("Subscribed!", subscription);
+  },
+});
 ```
 
 ## Testing payments

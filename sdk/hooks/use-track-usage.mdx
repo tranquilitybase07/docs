@@ -17,10 +17,8 @@ function ApiCallButton() {
   const { mutateAsync: trackUsage } = useTrackUsage();
 
   const handleApiCall = async () => {
-    // Do the actual work
     const result = await makeApiCall();
 
-    // Track the usage
     await trackUsage({
       featureKey: "api_calls",
       quantity: 1,
@@ -87,9 +85,22 @@ interface UsageMetric {
 }
 ```
 
+---
+
+### useFeatureEntitlements
+
+Fetch all feature entitlements for the current user.
+
+```tsx
+import { useFeatureEntitlements } from "@billingos/sdk";
+
+const { data } = useFeatureEntitlements();
+// data.entitlements: FeatureEntitlement[]
+```
+
 ## Example: Track with idempotency
 
-For server-side usage tracking where duplicate events could occur, use an idempotency key:
+For scenarios where duplicate events could occur, include metadata for deduplication:
 
 ```tsx
 await trackUsage({

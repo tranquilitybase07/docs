@@ -18,6 +18,8 @@ import { UsageDisplay, CompactUsageDisplay } from "@billingos/sdk";
 
 Renders a progress bar showing current usage vs the plan limit, with a reset timer.
 
+![Usage display](/images/usage-display.png)
+
 ## Props
 
 <ResponseField name="featureKey" type="string">
@@ -63,7 +65,7 @@ A smaller variant for inline use (e.g., in headers or sidebars).
 ### All features
 
 ```tsx
-<UsageDisplay title="Your Usage" />
+<UsageDisplay title="Your usage" />
 ```
 
 ### Single feature in a sidebar
@@ -80,7 +82,7 @@ A smaller variant for inline use (e.g., in headers or sidebars).
 ```tsx
 <UsageDisplay
   featureKey="team_members"
-  title="Team Members"
+  title="Team members"
   showResetTimer={false}
   className="bg-gray-50 rounded-lg p-4"
 />

@@ -8,9 +8,10 @@ icon: users
 
 ```typescript
 const customer = await billing.createCustomer({
+  externalUserId: "user_123",
   email: "jane@example.com",
   name: "Jane Smith",
-  metadata: { plan: "pro" },
+  metadata: { company: "Acme Inc" },
 });
 ```
 
@@ -18,9 +19,11 @@ const customer = await billing.createCustomer({
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `email` | `string` | Yes | Customer email |
+| `externalUserId` | `string` | Yes | Your user's unique ID |
+| `externalOrganizationId` | `string` | No | Organization ID for B2B |
+| `email` | `string` | No | Customer email |
 | `name` | `string` | No | Customer name |
-| `metadata` | `Record<string, string>` | No | Custom key-value pairs |
+| `metadata` | `Record<string, any>` | No | Custom key-value pairs |
 
 ---
 
@@ -38,20 +41,6 @@ Look up a customer by their ID in your system.
 
 ```typescript
 const customer = await billing.getCustomerByExternalId("user_123");
-```
-
----
-
-## listCustomers
-
-```typescript
-const { data, meta } = await billing.listCustomers({
-  page: 1,
-  page_size: 20,
-});
-
-// data: Customer[]
-// meta: { total, page, page_size, total_pages }
 ```
 
 ---
@@ -78,10 +67,13 @@ await billing.deleteCustomer("cus_123");
 ```typescript
 interface Customer {
   id: string
-  email: string
+  externalUserId: string
+  externalOrganizationId?: string
+  email?: string
   name?: string
-  metadata?: Record<string, string>
-  created_at: string
-  updated_at: string
+  stripeCustomerId?: string
+  metadata?: Record<string, any>
+  createdAt: Date
+  updatedAt: Date
 }
 ```

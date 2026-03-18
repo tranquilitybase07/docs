@@ -8,9 +8,9 @@ icon: repeat
 
 ```typescript
 const subscription = await billing.createSubscription({
-  customer_id: "cus_123",
-  price_id: "price_pro_monthly",
-  trial_days: 14,
+  customerId: "cus_123",
+  priceId: "price_pro_monthly",
+  metadata: { source: "api" },
 });
 ```
 
@@ -18,10 +18,9 @@ const subscription = await billing.createSubscription({
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `customer_id` | `string` | Yes | Customer ID |
-| `price_id` | `string` | Yes | Price ID to subscribe to |
-| `trial_days` | `number` | No | Free trial duration |
-| `metadata` | `Record<string, string>` | No | Custom key-value pairs |
+| `customerId` | `string` | Yes | BillingOS customer ID |
+| `priceId` | `string` | Yes | Price ID to subscribe to |
+| `metadata` | `Record<string, any>` | No | Custom key-value pairs |
 
 ---
 
@@ -33,13 +32,12 @@ const subscription = await billing.getSubscription("sub_123");
 
 ---
 
-## listSubscriptions
+## updateSubscription
 
 ```typescript
-const { data, meta } = await billing.listSubscriptions({
-  customer_id: "cus_123",
-  page: 1,
-  page_size: 10,
+const updated = await billing.updateSubscription("sub_123", {
+  priceId: "price_enterprise_monthly",
+  cancelAtPeriodEnd: false,
 });
 ```
 
@@ -48,11 +46,8 @@ const { data, meta } = await billing.listSubscriptions({
 ## cancelSubscription
 
 ```typescript
-// Cancel at end of billing period
+// Cancel at end of billing period (default)
 await billing.cancelSubscription("sub_123");
-
-// Cancel immediately
-await billing.cancelSubscription("sub_123", true);
 ```
 
 ---
@@ -70,17 +65,14 @@ await billing.reactivateSubscription("sub_123");
 ```typescript
 interface Subscription {
   id: string
-  customer_id: string
-  price_id: string
-  status: "active" | "canceled" | "incomplete" | "past_due" | "trialing" | "unpaid"
-  current_period_start: string
-  current_period_end: string
-  cancel_at_period_end: boolean
-  trial_start?: string
-  trial_end?: string
-  canceled_at?: string
-  metadata?: Record<string, string>
-  created_at: string
-  updated_at: string
+  customerId: string
+  stripeSubscriptionId?: string
+  status: "active" | "past_due" | "canceled" | "incomplete" | "trialing"
+  currentPeriodStart?: Date
+  currentPeriodEnd?: Date
+  cancelAtPeriodEnd: boolean
+  metadata?: Record<string, any>
+  createdAt: Date
+  updatedAt: Date
 }
 ```

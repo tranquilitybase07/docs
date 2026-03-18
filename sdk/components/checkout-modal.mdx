@@ -28,6 +28,8 @@ const [open, setOpen] = useState(false);
 
 The checkout modal renders in a secure iframe. Card data never touches your servers — it goes directly to Stripe.
 
+![Checkout modal](/images/checkout-modal.png)
+
 ## Props
 
 <ResponseField name="open" type="boolean" required>
@@ -75,8 +77,8 @@ The checkout modal renders in a secure iframe. Card data never touches your serv
   Custom key-value pairs attached to the subscription.
 </ResponseField>
 
-<ResponseField name="theme" type="'light' | 'dark' | 'auto'" default="'light'">
-  Color theme for the checkout.
+<ResponseField name="adaptivePricing" type="boolean">
+  Enable localized pricing based on the customer's location.
 </ResponseField>
 
 <ResponseField name="locale" type="string">
@@ -94,6 +96,10 @@ The checkout modal renders in a secure iframe. Card data never touches your serv
 <ResponseField name="debug" type="boolean" default="false">
   Enable debug logging for development.
 </ResponseField>
+
+<Info>
+  The checkout modal runs in a secure iframe. Card details are handled entirely by Stripe — your app never processes or stores payment information. This means you're PCI-compliant by default.
+</Info>
 
 ## Examples
 
@@ -126,5 +132,17 @@ The checkout modal renders in a secure iframe. Card data never touches your serv
   couponCode="LAUNCH20"
   onSuccess={handleSuccess}
   onError={(err) => toast.error(err.message)}
+/>
+```
+
+### Adaptive pricing
+
+```tsx
+<CheckoutModal
+  open={open}
+  onOpenChange={setOpen}
+  priceId="price_pro_monthly"
+  adaptivePricing={true}
+  onSuccess={handleSuccess}
 />
 ```

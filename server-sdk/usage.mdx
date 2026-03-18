@@ -1,5 +1,5 @@
 ---
-title: Usage Tracking
+title: Usage tracking
 description: Track metered usage from your server for reliable billing.
 icon: chart-line
 ---
@@ -10,7 +10,7 @@ Record a usage event. Server-side tracking is recommended for accuracy — it ca
 
 ```typescript
 await billing.trackUsage({
-  customerId: "cus_123",
+  customerId: "user_123",
   featureKey: "api_calls",
   quantity: 1,
 });
@@ -20,23 +20,40 @@ await billing.trackUsage({
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `customerId` | `string` | Yes | Customer ID |
+| `customerId` | `string` | Yes | Customer external user ID |
 | `featureKey` | `string` | Yes | Which feature was used |
-| `quantity` | `number` | Yes | How many units to track |
-| `timestamp` | `string` | No | ISO timestamp (defaults to now) |
-| `idempotency_key` | `string` | No | Prevent duplicate tracking |
-| `metadata` | `Record<string, string>` | No | Additional context |
+| `quantity` | `number` | Yes | How many units to track (must be > 0) |
+| `idempotencyKey` | `string` | No | Prevent duplicate tracking on retries |
+| `metadata` | `Record<string, any>` | No | Additional context |
+
+### Response
+
+```typescript
+interface TrackUsageResponse {
+  success: boolean
+  feature_key: string
+  quantity: number
+  recorded_at: string
+  usage?: {
+    consumed_units: number
+    limit_units: number
+    remaining_units: number
+    period_start: string
+    period_end: string
+  }
+}
+```
 
 ### Idempotency
 
-Pass an `idempotency_key` to prevent duplicate events (e.g., from retries):
+Pass an `idempotencyKey` to prevent duplicate events (e.g., from retries):
 
 ```typescript
 await billing.trackUsage({
-  customerId: "cus_123",
+  customerId: "user_123",
   featureKey: "api_calls",
   quantity: 1,
-  idempotency_key: `api-call-${requestId}`,
+  idempotencyKey: `api-call-${requestId}`,
 });
 ```
 
@@ -47,20 +64,37 @@ await billing.trackUsage({
 Fetch current usage metrics for a customer.
 
 ```typescript
-const metrics = await billing.getUsageMetrics("cus_123", "api_calls");
-
-// metrics.current_usage: 450
-// metrics.limit: 1000
-// metrics.period_start: "2025-01-01T00:00:00Z"
-// metrics.period_end: "2025-02-01T00:00:00Z"
+const metrics = await billing.getUsageMetrics("user_123", "api_calls");
 ```
 
 ### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `customerId` | `string` | Yes | Customer ID |
-| `featureKey` | `string` | Yes | Feature to get metrics for |
+| `customerId` | `string` | Yes | Customer external user ID |
+| `featureKey` | `string` | No | Filter to a specific feature |
+
+### Response
+
+```typescript
+interface UsageMetricsResponse {
+  metrics: UsageMetric[]
+  customer_id: string
+}
+
+interface UsageMetric {
+  feature_key: string
+  feature_title: string
+  product_name: string
+  consumed: number
+  limit: number
+  remaining: number
+  percentage_used: number
+  period_start: string
+  period_end: string
+  resets_in_days: number
+}
+```
 
 ## Example: Track + check in one flow
 
@@ -75,7 +109,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Plan upgrade required" }, { status: 403 });
   }
 
-  if (entitlement.usage >= entitlement.limit) {
+  if (entitlement.usage !== null && entitlement.limit !== null && entitlement.usage >= entitlement.limit) {
     return Response.json({ error: "API call limit reached" }, { status: 429 });
   }
 

@@ -14,26 +14,39 @@ This guide walks you through adding BillingOS to your app. By the end, you'll ha
 
 <CodeGroup>
 ```bash npm
-npm install @billingos/sdk @billingos/node
+npm install @billingos/sdk @tanstack/react-query
 ```
 
 ```bash pnpm
-pnpm add @billingos/sdk @billingos/node
+pnpm add @billingos/sdk @tanstack/react-query
 ```
 
 ```bash yarn
-yarn add @billingos/sdk @billingos/node
+yarn add @billingos/sdk @tanstack/react-query
 ```
 </CodeGroup>
 
-`@billingos/sdk` — React components and hooks for your frontend.
-`@billingos/node` — Server SDK for creating session tokens.
+For your server, install the Node SDK separately:
+
+<CodeGroup>
+```bash npm
+npm install @billingos/node
+```
+
+```bash pnpm
+pnpm add @billingos/node
+```
+
+```bash yarn
+yarn add @billingos/node
+```
+</CodeGroup>
 
 ## Step 2: Create a session token endpoint
 
-BillingOS uses **session tokens** to securely identify your users. You create the token on your server (so your secret key stays private), and the SDK uses it automatically for all API calls.
+BillingOS uses **session tokens** to securely identify your customers. You create the token on your server (so your secret key stays private), and the SDK uses it automatically for all API calls.
 
-First, add your secret key to your environment:
+Add your secret key to your environment:
 
 ```bash .env.local
 BILLINGOS_SECRET_KEY=sk_test_your_secret_key_here
@@ -71,7 +84,6 @@ const billing = new BillingOS({
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Replace with your actual auth
   const userId = await getLoggedInUserId(req);
 
   const { sessionToken, expiresAt } = await billing.createSessionToken({
@@ -83,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 ```
 
-```typescript Node.js / Express [routes/billingos-session.ts]
+```typescript Express [routes/billingos-session.ts]
 import express from "express";
 import { BillingOS } from "@billingos/node";
 
@@ -94,7 +106,6 @@ const billing = new BillingOS({
 const router = express.Router();
 
 router.get("/api/billingos-session", async (req, res) => {
-  // Replace with your actual auth middleware
   const userId = req.user.id;
 
   const { sessionToken, expiresAt } = await billing.createSessionToken({
@@ -111,20 +122,32 @@ router.get("/api/billingos-session", async (req, res) => {
   The `externalUserId` is your user's ID from your own database. BillingOS uses it to link the session to the right customer's subscriptions and entitlements.
 </Tip>
 
-## Step 3: Add the Provider to your app
+## Step 3: Add the provider
 
-`BillingOSProvider` (from `@billingos/sdk`) wraps your app and handles fetching the session token automatically. Pass it the URL of the endpoint you just created.
+`BillingOSProvider` wraps your app and handles fetching the session token automatically.
+
+```tsx app/providers.tsx
+"use client";
+
+import { BillingOSProvider } from "@billingos/sdk";
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <BillingOSProvider sessionTokenUrl="/api/billingos-session">
+      {children}
+    </BillingOSProvider>
+  );
+}
+```
 
 ```tsx app/layout.tsx
-import { BillingOSProvider } from "@billingos/sdk";
+import { Providers } from "./providers";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html>
       <body>
-        <BillingOSProvider sessionTokenUrl="/api/billingos-session">
-          {children}
-        </BillingOSProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
@@ -135,26 +158,15 @@ That's all the setup. The SDK now:
 - Fetches a session token from your endpoint when the app loads
 - Attaches the token to every API call
 - Refreshes the token automatically before it expires
+- Injects required CSS on mount (no separate CSS import needed)
 
 <Note>
-  Next.js App Router requires `"use client"` for components that use React context. If you hit this, wrap `BillingOSProvider` in a client component:
-  ```tsx app/providers.tsx
-  "use client";
-  import { BillingOSProvider } from "@billingos/sdk";
-  export function Providers({ children }: { children: React.ReactNode }) {
-    return (
-      <BillingOSProvider sessionTokenUrl="/api/billingos-session">
-        {children}
-      </BillingOSProvider>
-    );
-  }
-  ```
-  Then use `<Providers>` in your layout instead.
+  Next.js App Router requires `"use client"` for components that use React context. That's why we create a separate `Providers` wrapper — your layout stays a Server Component.
 </Note>
 
 ## Step 4: Add a pricing page
 
-Drop in the `PricingTable` component. It fetches your products and renders a complete pricing page — no extra code needed.
+Drop in the `PricingTable` component. It fetches your products and renders a complete pricing page with built-in checkout.
 
 ```tsx app/pricing/page.tsx
 import { PricingTable } from "@billingos/sdk";
@@ -162,11 +174,15 @@ import { PricingTable } from "@billingos/sdk";
 export default function PricingPage() {
   return (
     <div className="max-w-5xl mx-auto py-16 px-4">
-      <PricingTable useCheckoutModal={true} />
+      <PricingTable />
     </div>
   );
 }
 ```
+
+When a customer selects a plan, the checkout modal opens automatically — no extra code needed.
+
+![PricingTable component](/images/pricing-table.png)
 
 ## Step 5: Test it
 
@@ -187,13 +203,13 @@ You should see your products displayed as pricing cards. Click any plan to open 
 ## What's next?
 
 <CardGroup cols={3}>
-  <Card title="Show a Pricing Page" icon="tags" href="/guides/show-a-pricing-page">
+  <Card title="Show a pricing page" icon="tags" href="/guides/show-a-pricing-page">
     Customize your pricing table with filters, themes, and custom actions.
   </Card>
-  <Card title="Manage Subscriptions" icon="user-gear" href="/guides/manage-subscriptions">
+  <Card title="Manage subscriptions" icon="user-gear" href="/guides/manage-subscriptions">
     Add a self-service customer portal.
   </Card>
-  <Card title="Gate Features" icon="lock" href="/guides/gate-features">
+  <Card title="Gate features" icon="lock" href="/guides/gate-features">
     Control access to features based on plan.
   </Card>
 </CardGroup>

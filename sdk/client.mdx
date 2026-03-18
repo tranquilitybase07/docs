@@ -14,13 +14,17 @@ The `BillingOSClient` class provides direct access to all BillingOS API methods.
 
 ## Access the client
 
+From within a BillingOSProvider:
+
 ```tsx
 import { useBillingOS } from "@billingos/sdk";
 
 function MyComponent() {
   const { client } = useBillingOS();
 
-  // Use client methods directly
+  // client is null until the session token loads
+  if (!client) return null;
+
   const subscription = await client.getSubscription("sub_123");
 }
 ```
@@ -28,10 +32,10 @@ function MyComponent() {
 Or create a standalone client:
 
 ```tsx
-import { createBillingOSClient } from "@billingos/sdk";
+import { BillingOSClient } from "@billingos/sdk";
 
-const client = createBillingOSClient("bos_session_xxx", {
-  baseUrl: "https://api.billingos.com",
+const client = new BillingOSClient("bos_session_test_xxx", {
+  baseUrl: "https://api.billingos.dev",
 });
 ```
 
@@ -39,11 +43,11 @@ const client = createBillingOSClient("bos_session_xxx", {
 
 ```typescript
 interface BillingOSClientOptions {
-  baseUrl?: string               // API base URL
+  baseUrl?: string                     // API base URL (auto-detected from token)
   environment?: "production" | "sandbox"
-  version?: string               // API version
-  headers?: Record<string, string>  // Custom headers
-  timeout?: number               // Request timeout (ms)
+  version?: string                     // API version
+  headers?: Record<string, string>     // Custom headers
+  timeout?: number                     // Request timeout (ms)
 }
 ```
 
@@ -66,20 +70,22 @@ interface BillingOSClientOptions {
 | `createSubscription(input)` | Create a subscription |
 | `getSubscription(id)` | Get a subscription |
 | `listSubscriptions(params?)` | List subscriptions (paginated) |
+| `updateSubscription(id, input)` | Update a subscription |
 | `cancelSubscription(id, immediately?)` | Cancel a subscription |
 | `reactivateSubscription(id)` | Reactivate a cancelled subscription |
+| `previewSubscription(id, input)` | Preview subscription update proration |
 | `getAvailablePlans(subscriptionId)` | Get upgrade/downgrade options |
-| `previewPlanChange(subId, input)` | Preview plan change proration |
+| `previewPlanChange(subId, input)` | Preview plan change cost |
 | `changePlan(subId, input)` | Execute a plan change |
 
-### Entitlements & Features
+### Entitlements and features
 
 | Method | Description |
 |--------|-------------|
 | `checkEntitlement(input)` | Check if a customer has access to a feature |
 | `listEntitlements(customerId?)` | List all entitlements |
 
-### Usage Tracking
+### Usage tracking
 
 | Method | Description |
 |--------|-------------|
@@ -93,7 +99,7 @@ interface BillingOSClientOptions {
 | `getInvoice(id)` | Get an invoice |
 | `listInvoices(params?)` | List invoices (paginated) |
 
-### Payment Methods
+### Payment methods
 
 | Method | Description |
 |--------|-------------|
@@ -108,7 +114,7 @@ interface BillingOSClientOptions {
 | `createCheckout(input)` | Create a checkout session |
 | `confirmCheckout(clientSecret, paymentMethodId)` | Confirm a payment |
 
-### Checkout Modal (iframe)
+### Checkout modal (iframe)
 
 Access via `client.checkout.*`:
 
@@ -117,7 +123,6 @@ Access via `client.checkout.*`:
 | `checkout.createSession(input)` | Create a checkout session for the modal |
 | `checkout.getSession(sessionId)` | Get session details |
 | `checkout.confirmPayment(secret, pmId)` | Confirm payment |
-| `checkout.applyCoupon(sessionId, code)` | Apply a coupon code |
 
 ### Portal (iframe)
 
@@ -135,8 +140,56 @@ Access via `client.portal.*`:
 |--------|-------------|
 | `getProducts(planIds?)` | Fetch products for pricing table |
 
-### Upgrade Nudge
+### Upgrade nudge
 
 | Method | Description |
 |--------|-------------|
 | `checkUsage()` | Check if an upgrade nudge should be shown |
+
+## Error classes
+
+The client throws typed errors you can catch:
+
+```typescript
+import {
+  BillingOSError,
+  UnauthorizedError,
+  NotFoundError,
+  ValidationError,
+  RateLimitError,
+  ServerError,
+  NetworkError,
+} from "@billingos/sdk";
+
+try {
+  await client.getSubscription("sub_invalid");
+} catch (error) {
+  if (error instanceof NotFoundError) {
+    console.log("Subscription not found");
+  } else if (error instanceof UnauthorizedError) {
+    console.log("Session token expired");
+  }
+}
+```
+
+## Imperative checkout API
+
+Open checkout from anywhere in your app — even outside React components:
+
+```typescript
+// Via the global window object
+window.billingOS?.checkout.open({
+  priceId: "price_pro_monthly",
+  onSuccess: (subscription) => console.log("Subscribed!", subscription),
+  onError: (error) => console.error("Failed:", error),
+  onCancel: () => console.log("Cancelled"),
+});
+
+// Or using the exported function
+import { openCheckout } from "@billingos/sdk";
+
+const result = await openCheckout({
+  priceId: "price_pro_monthly",
+  sessionToken: "bos_session_test_...",
+});
+```

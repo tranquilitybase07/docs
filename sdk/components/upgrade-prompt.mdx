@@ -15,7 +15,7 @@ import { UpgradePrompt, CompactUpgradePrompt } from "@billingos/sdk";
 ```tsx
 <UpgradePrompt
   feature="advanced_analytics"
-  title="Unlock Advanced Analytics"
+  title="Unlock advanced analytics"
   description="Get deeper insights into your data with the Pro plan."
   onUpgradeClick={() => router.push("/pricing")}
 />
@@ -59,7 +59,7 @@ Unlike `UpgradeNudge` (which triggers automatically), `UpgradePrompt` is placed 
 
 ## CompactUpgradePrompt
 
-A smaller inline variant.
+A smaller inline variant for toolbars and sidebars.
 
 ```tsx
 <CompactUpgradePrompt
@@ -84,7 +84,7 @@ A smaller inline variant.
   fallback={
     <UpgradePrompt
       feature="custom_reports"
-      title="Custom Reports"
+      title="Custom reports"
       description="Create custom reports with the Pro plan."
       onUpgradeClick={() => router.push("/pricing")}
     />
@@ -101,7 +101,7 @@ A smaller inline variant.
   isQuotaExceeded={true}
   usage={1000}
   limit={1000}
-  title="API Call Limit Reached"
+  title="API call limit reached"
   description="Upgrade your plan to continue making API calls."
   onUpgradeClick={() => setCheckoutOpen(true)}
 />

@@ -38,32 +38,66 @@ icon: plug
 
 ## Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `sessionTokenUrl` | `string` | One of `sessionTokenUrl` or `sessionToken` | URL to fetch session tokens from your server |
-| `sessionToken` | `string` | One of `sessionTokenUrl` or `sessionToken` | A session token string (manual mode) |
-| `sessionTokenOptions` | `object` | No | Options for token fetching behavior |
-| `customerId` | `string` | No | Override the customer ID |
-| `customerEmail` | `string` | No | Customer's email address |
-| `customerName` | `string` | No | Customer's display name |
-| `organizationId` | `string` | No | Your BillingOS organization ID |
-| `options` | `BillingOSClientOptions` | No | SDK client configuration |
-| `queryClient` | `QueryClient` | No | Custom TanStack Query client |
-| `children` | `ReactNode` | Yes | Your app content |
+<ResponseField name="sessionTokenUrl" type="string">
+  URL to fetch session tokens from your server. The SDK calls this endpoint automatically, stores the token, and refreshes it before expiry. **Use this or `sessionToken` — one is required.**
+</ResponseField>
 
-### Client options
+<ResponseField name="sessionToken" type="string">
+  A session token string for manual mode. You're responsible for refreshing the token yourself. **Use this or `sessionTokenUrl` — one is required.**
+</ResponseField>
 
-```tsx
-<BillingOSProvider
-  sessionTokenUrl="/api/billingos-session"
-  options={{
-    baseUrl: "https://api.billingos.com",  // Custom API URL
-    timeout: 30000,                         // Request timeout in ms
-  }}
->
-  {children}
-</BillingOSProvider>
-```
+<ResponseField name="sessionTokenOptions" type="object">
+  Options for token fetching behavior (automatic mode only).
+  <Expandable>
+    <ResponseField name="refetchInterval" type="number">How often to refresh the token (ms).</ResponseField>
+    <ResponseField name="refetchOnWindowFocus" type="boolean">Refresh when the browser tab gains focus.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="customerId" type="string">
+  Override the customer ID.
+</ResponseField>
+
+<ResponseField name="customerEmail" type="string">
+  Customer's email address.
+</ResponseField>
+
+<ResponseField name="customerName" type="string">
+  Customer's display name.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  Your BillingOS organization ID.
+</ResponseField>
+
+<ResponseField name="appearance" type="AppearanceConfig">
+  Customize the visual appearance of BillingOS components. See [Appearance](#appearance) below.
+</ResponseField>
+
+<ResponseField name="loadingFallback" type="ReactNode">
+  Content to render while the session token is being fetched.
+</ResponseField>
+
+<ResponseField name="options" type="BillingOSClientOptions">
+  SDK client configuration.
+  <Expandable>
+    <ResponseField name="baseUrl" type="string">Custom API URL (auto-detected from token by default).</ResponseField>
+    <ResponseField name="timeout" type="number">Request timeout in ms (default: 30000).</ResponseField>
+    <ResponseField name="headers" type="Record<string, string>">Custom headers for API requests.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="queryClient" type="QueryClient">
+  Custom TanStack Query client. If omitted, the SDK creates one internally.
+</ResponseField>
+
+<ResponseField name="debug" type="boolean" default="false">
+  Enable debug logging.
+</ResponseField>
+
+<ResponseField name="children" type="ReactNode" required>
+  Your app content.
+</ResponseField>
 
 ## Automatic vs manual tokens
 
@@ -83,6 +117,57 @@ The SDK calls your endpoint, stores the token, and refreshes it before expiry. Z
 
 You manage token fetching and refresh yourself. Useful if you have a custom auth setup.
 
+## Appearance
+
+Customize the visual appearance of all BillingOS components through the `appearance` prop:
+
+```tsx
+<BillingOSProvider
+  sessionTokenUrl="/api/billingos-session"
+  appearance={{
+    theme: "auto", // "light" | "dark" | "auto"
+    light: {
+      colorPrimary: "#16A34A",
+      colorBackground: "#FFFFFF",
+      colorText: "#1A1A1A",
+      borderRadius: "8px",
+      fontFamily: "Inter, sans-serif",
+    },
+    dark: {
+      colorPrimary: "#22C55E",
+      colorBackground: "#0A0A0A",
+      colorText: "#FAFAFA",
+      borderRadius: "8px",
+      fontFamily: "Inter, sans-serif",
+    },
+  }}
+>
+  {children}
+</BillingOSProvider>
+```
+
+### AppearanceConfig
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `theme` | `"light" \| "dark" \| "auto"` | Color scheme. `auto` follows the user's system preference. |
+| `light` | `AppearanceVariables` | Variable overrides for light theme. |
+| `dark` | `AppearanceVariables` | Variable overrides for dark theme. |
+
+### AppearanceVariables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `colorPrimary` | `string` | Primary accent color (buttons, links, highlights). |
+| `colorBackground` | `string` | Background color for components. |
+| `colorText` | `string` | Text color. |
+| `borderRadius` | `string` | Border radius for cards, buttons, inputs. |
+| `fontFamily` | `string` | Font family for all text. |
+
+<Tip>
+  The SDK injects CSS on mount automatically — no separate CSS import needed.
+</Tip>
+
 ## Accessing the context
 
 Use the `useBillingOS` hook to access the SDK client from any component:
@@ -91,10 +176,10 @@ Use the `useBillingOS` hook to access the SDK client from any component:
 import { useBillingOS } from "@billingos/sdk";
 
 function MyComponent() {
-  const { client, customerId } = useBillingOS();
+  const { client, customerId, appearance } = useBillingOS();
 
   // Use client for custom API calls
-  const subscription = await client.getSubscription("sub_123");
+  const products = await client?.getProducts();
 }
 ```
 
@@ -102,8 +187,12 @@ function MyComponent() {
 
 | Value | Type | Description |
 |-------|------|-------------|
-| `client` | `BillingOSClient` | The SDK client instance |
+| `client` | `BillingOSClient \| null` | The SDK client instance (null before token loads) |
+| `apiUrl` | `string` | Resolved API URL |
+| `appUrl` | `string` | Resolved app URL |
 | `customerId` | `string \| undefined` | Current customer's ID |
 | `customerEmail` | `string \| undefined` | Customer's email |
 | `customerName` | `string \| undefined` | Customer's name |
 | `organizationId` | `string \| undefined` | Organization ID |
+| `appearance` | `AppearanceConfig \| undefined` | Appearance configuration |
+| `debug` | `boolean` | Debug mode |

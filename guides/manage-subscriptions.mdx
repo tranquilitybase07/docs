@@ -1,12 +1,14 @@
 ---
-title: Manage Subscriptions
+title: Manage subscriptions
 description: Add a self-service portal where customers manage their billing.
 icon: user-gear
 ---
 
+Self-service billing reduces support tickets and increases customer satisfaction. BillingOS gives you a complete customer portal that handles plan changes, invoices, payment methods, and cancellations — all in a single component.
+
 ## Drop-in customer portal
 
-The `CustomerPortal` component gives your users a complete billing management interface — subscriptions, invoices, payment methods, and settings.
+The `CustomerPortal` component gives your users a complete billing management interface:
 
 ```tsx
 import { CustomerPortal } from "@billingos/sdk";
@@ -16,6 +18,8 @@ export default function BillingPage() {
 }
 ```
 
+![Customer portal](/images/customer-portal.png)
+
 That single line gives your customers:
 - Current plan details and renewal date
 - Upgrade and downgrade options with proration preview
@@ -23,7 +27,39 @@ That single line gives your customers:
 - Add, remove, and change default payment methods
 - Cancel and reactivate subscriptions
 
-See the full [CustomerPortal reference](/sdk/components/customer-portal) for all props and display modes.
+### Display modes
+
+The portal supports three modes for different UI patterns:
+
+```tsx
+// Full-page billing section
+<CustomerPortal mode="page" />
+
+// Slide-in drawer from the right
+<CustomerPortal mode="drawer" isOpen={open} onClose={() => setOpen(false)} />
+
+// Centered modal dialog
+<CustomerPortal mode="modal" isOpen={open} onClose={() => setOpen(false)} />
+```
+
+### Handle events
+
+```tsx
+<CustomerPortal
+  mode="page"
+  onSubscriptionUpdate={(subscription) => {
+    toast.success("Plan updated!");
+  }}
+  onSubscriptionCancel={() => {
+    toast.info("Subscription will cancel at end of period");
+  }}
+  onPaymentMethodAdd={() => {
+    toast.success("Payment method added");
+  }}
+/>
+```
+
+See the full [CustomerPortal reference](/sdk/components/customer-portal) for all props.
 
 ## Using hooks for custom UIs
 
@@ -71,7 +107,7 @@ function PlanSwitcher({ subscriptionId }: { subscriptionId: string }) {
 
   return (
     <div>
-      <h3>Available Upgrades</h3>
+      <h3>Available upgrades</h3>
       {plans?.available_upgrades.map((plan) => (
         <button key={plan.price_id} onClick={() => handleChange(plan.price_id)}>
           {plan.name} — ${plan.amount / 100}/mo

@@ -1,12 +1,10 @@
 ---
-title: Upgrade Nudges
+title: Upgrade nudges
 description: Automatically prompt users to upgrade when they approach plan limits.
 icon: arrow-up
 ---
 
-## What are upgrade nudges?
-
-Upgrade nudges are automated prompts that appear when a user is approaching or has exceeded their plan limits. Instead of a hard wall, nudges encourage users to upgrade at the right moment.
+The best time to ask for an upgrade is when a customer is getting real value from your product. Upgrade nudges appear automatically when usage approaches a limit — converting engaged users at the perfect moment instead of hitting them with a hard paywall.
 
 ## How it works
 
@@ -17,8 +15,7 @@ Upgrade nudges are automated prompts that appear when a user is approaching or h
 ## Automatic nudge
 
 ```tsx
-import { UpgradeNudge } from "@billingos/sdk";
-import { useBillingOS } from "@billingos/sdk";
+import { UpgradeNudge, useBillingOS } from "@billingos/sdk";
 import { useQuery } from "@tanstack/react-query";
 
 function NudgeBanner() {
@@ -26,7 +23,8 @@ function NudgeBanner() {
 
   const { data } = useQuery({
     queryKey: ["usage-check"],
-    queryFn: () => client.checkUsage(),
+    queryFn: () => client!.checkUsage(),
+    enabled: !!client,
     refetchInterval: 60000, // Check every minute
   });
 
@@ -37,13 +35,14 @@ function NudgeBanner() {
       trigger={data.trigger}
       style="banner"
       onUpgrade={(priceId) => {
-        // Open checkout for the suggested plan
         router.push(`/pricing?plan=${priceId}`);
       }}
     />
   );
 }
 ```
+
+![Upgrade nudge](/images/upgrade-nudge.png)
 
 ## Display styles
 
@@ -73,21 +72,38 @@ import { UpgradePrompt } from "@billingos/sdk";
 
 <UpgradePrompt
   feature="advanced_analytics"
-  title="Unlock Advanced Analytics"
+  title="Unlock advanced analytics"
   description="Get deeper insights with the Pro plan."
   onUpgradeClick={() => router.push("/pricing")}
 />
 ```
 
-Or combine with `FeatureGate` for context-aware prompts:
+### Compact variant
+
+For inline placement in toolbars or sidebars:
 
 ```tsx
+import { CompactUpgradePrompt } from "@billingos/sdk";
+
+<CompactUpgradePrompt
+  feature="custom_reports"
+  onUpgradeClick={() => setCheckoutOpen(true)}
+/>
+```
+
+### Combine with FeatureGate
+
+Show context-aware upgrade prompts when a feature is locked:
+
+```tsx
+import { FeatureGate, UpgradePrompt } from "@billingos/sdk";
+
 <FeatureGate
   feature="custom_reports"
   fallback={
     <UpgradePrompt
       feature="custom_reports"
-      title="Custom Reports"
+      title="Custom reports"
       description="Available on Pro and Enterprise plans."
       onUpgradeClick={() => setCheckoutOpen(true)}
     />

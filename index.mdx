@@ -6,56 +6,56 @@ icon: house
 
 ## What is BillingOS?
 
-BillingOS is a developer toolkit that lets you add billing to any web app. You get pre-built React components for pricing pages, checkout, and customer portals — plus a server SDK for backend operations like feature gating and usage tracking.
+BillingOS is a developer toolkit that lets you add complete billing infrastructure to any web app. You get pre-built React components for pricing pages, checkout, and customer portals — plus a server SDK for backend operations like feature gating and usage tracking.
 
-**You don't need to learn Stripe.** BillingOS handles all the payment complexity behind the scenes.
+**You don't need to learn Stripe.** BillingOS handles all the payment complexity behind the scenes. Your customers get a polished billing experience, and you ship faster.
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
     Go from zero to accepting payments in 5 minutes.
   </Card>
   <Card title="React SDK" icon="react" href="/sdk/overview">
     Drop-in components for pricing, checkout, and portals.
   </Card>
-  <Card title="API Reference" icon="code" href="/api-reference/introduction">
-    Full REST API documentation.
+  <Card title="Node SDK" icon="server" href="/server-sdk/overview">
+    Server-side session tokens, entitlements, and usage tracking.
   </Card>
 </CardGroup>
 
 ## What you can build
 
 <CardGroup cols={3}>
-  <Card title="Pricing Page" icon="tags">
+  <Card title="Pricing page" icon="tags">
     Show plans with a single `<PricingTable />` component. Monthly/yearly toggle built in.
   </Card>
   <Card title="Checkout" icon="credit-card">
     Secure, PCI-compliant checkout modal. No Stripe code needed.
   </Card>
-  <Card title="Customer Portal" icon="user-gear">
+  <Card title="Customer portal" icon="user-gear">
     Self-service portal where customers manage subscriptions, invoices, and payment methods.
   </Card>
-  <Card title="Feature Gating" icon="lock">
+  <Card title="Feature gating" icon="lock">
     Control access to features based on subscription plan. Works client-side and server-side.
   </Card>
-  <Card title="Usage Tracking" icon="chart-bar">
+  <Card title="Usage tracking" icon="chart-bar">
     Track API calls, storage, or any metric. Bill based on usage.
   </Card>
-  <Card title="Upgrade Nudges" icon="arrow-up">
+  <Card title="Upgrade nudges" icon="arrow-up">
     Automatically prompt users to upgrade when they approach plan limits.
   </Card>
 </CardGroup>
 
-## How it works (30-second version)
+## How it works
 
 <Steps>
   <Step title="Install the SDK">
-    Add `@billingos/sdk` to your React app and `@billingos/node` to your server.
+    Add `@billingos/sdk` to your React app and `@billingos/node` to your server. Two packages, zero Stripe dependencies.
   </Step>
   <Step title="Create a session token endpoint">
-    Your server creates a short-lived token that authenticates your customer with BillingOS.
+    Your server creates a short-lived token that securely identifies your customer to BillingOS. The SDK handles token refresh automatically.
   </Step>
   <Step title="Drop in components">
-    Add `<PricingTable />` for plans, `<CheckoutModal />` for payments, `<CustomerPortal />` for self-service.
+    Add `<PricingTable />` for plans, `<CheckoutModal />` for payments, and `<CustomerPortal />` for self-service billing management.
   </Step>
   <Step title="You're live">
     Customers can subscribe, upgrade, downgrade, and manage their billing. You focus on your product.

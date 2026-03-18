@@ -72,6 +72,21 @@ await createSubscription({
 
 ---
 
+### useUpdateSubscription
+
+Update an existing subscription.
+
+```tsx
+const { mutateAsync: updateSubscription } = useUpdateSubscription(subscriptionId);
+
+await updateSubscription({
+  price_id: "price_enterprise_monthly",
+  cancel_at_period_end: false,
+});
+```
+
+---
+
 ### useCancelSubscription
 
 Cancel a subscription.
@@ -96,6 +111,22 @@ Reactivate a cancelled subscription (before the period ends).
 const { mutateAsync: reactivate } = useReactivateSubscription(subscriptionId);
 
 await reactivate();
+```
+
+---
+
+### useSubscriptionPreview
+
+Preview proration for a subscription update.
+
+```tsx
+const { data } = useSubscriptionPreview(subscriptionId, {
+  price_id: "price_enterprise_monthly",
+});
+
+// data.proration_amount — charge/credit
+// data.next_invoice_amount
+// data.next_invoice_date
 ```
 
 ---
@@ -126,7 +157,7 @@ const result = await preview({
   input: { new_price_id: "price_enterprise_monthly" },
 });
 
-// result.proration.amount — proration charge/credit
+// result.proration — { amount, credited, charged }
 // result.change_type — "upgrade" | "downgrade"
 // result.next_billing_date
 ```
@@ -156,7 +187,8 @@ interface Subscription {
   id: string
   customer_id: string
   price_id: string
-  status: "active" | "canceled" | "incomplete" | "past_due" | "trialing" | "unpaid"
+  status: "active" | "canceled" | "incomplete" | "incomplete_expired"
+         | "past_due" | "trialing" | "unpaid"
   current_period_start: string
   current_period_end: string
   cancel_at_period_end: boolean

@@ -1,8 +1,10 @@
 ---
-title: Track Usage
+title: Track usage
 description: Track metered usage for quota-based billing and feature limits.
 icon: chart-bar
 ---
+
+Usage-based pricing lets you charge customers for what they actually use — API calls, storage, team members, or any metric. BillingOS tracks usage in real time and enforces limits automatically.
 
 ## When to track usage
 
@@ -47,17 +49,17 @@ const billing = new BillingOS({ secretKey: process.env.BILLINGOS_SECRET_KEY! });
 
 // Track an API call
 await billing.trackUsage({
-  customerId: "cus_123",
+  customerId: "user_123",
   featureKey: "api_calls",
   quantity: 1,
 });
 
-// Track with idempotency key (prevents duplicates)
+// Track with idempotency key (prevents duplicates on retries)
 await billing.trackUsage({
-  customerId: "cus_123",
+  customerId: "user_123",
   featureKey: "api_calls",
   quantity: 1,
-  idempotency_key: `request-${requestId}`,
+  idempotencyKey: `request-${requestId}`,
 });
 ```
 
@@ -69,11 +71,13 @@ await billing.trackUsage({
 import { UsageDisplay } from "@billingos/sdk";
 
 // Show all metered features
-<UsageDisplay title="Your Usage" />
+<UsageDisplay title="Your usage" />
 
 // Show a specific feature
 <UsageDisplay featureKey="api_calls" />
 ```
+
+![Usage display](/images/usage-display.png)
 
 ### Custom usage UI with hooks
 
@@ -117,4 +121,4 @@ if (isNearLimit) {
 }
 ```
 
-The `UpgradeNudge` component can also handle this automatically — see [Upgrade Nudges](/guides/upgrade-nudges).
+The `UpgradeNudge` component can also handle this automatically — see [Upgrade nudges](/guides/upgrade-nudges).

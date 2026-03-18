@@ -57,7 +57,6 @@
           {
             "group": "Production",
             "pages": [
-              "guides/handle-webhooks",
               "guides/go-live-checklist"
             ]
           }
@@ -117,57 +116,6 @@
               "server-sdk/subscriptions",
               "server-sdk/entitlements",
               "server-sdk/usage"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": [
-              "api-reference/introduction",
-              "api-reference/authentication",
-              "api-reference/errors"
-            ]
-          },
-          {
-            "group": "Checkout",
-            "pages": [
-              "api-reference/checkout/create",
-              "api-reference/checkout/status",
-              "api-reference/checkout/confirm"
-            ]
-          },
-          {
-            "group": "Products",
-            "pages": [
-              "api-reference/products/list"
-            ]
-          },
-          {
-            "group": "Features & Entitlements",
-            "pages": [
-              "api-reference/features/check",
-              "api-reference/features/entitlements",
-              "api-reference/features/track-usage",
-              "api-reference/features/usage-metrics"
-            ]
-          },
-          {
-            "group": "Portal",
-            "pages": [
-              "api-reference/portal/create",
-              "api-reference/portal/status",
-              "api-reference/portal/data"
-            ]
-          },
-          {
-            "group": "Subscriptions",
-            "pages": [
-              "api-reference/subscriptions/cancel",
-              "api-reference/subscriptions/reactivate"
             ]
           }
         ]

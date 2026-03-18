@@ -53,6 +53,7 @@ function UpgradeButton({ priceId }: { priceId: string }) {
 | `couponCode` | `string` | No | Discount code |
 | `existingSubscriptionId` | `string` | No | For upgrades/downgrades |
 | `metadata` | `Record<string, string>` | No | Custom data |
+| `adaptivePricing` | `boolean` | No | Enable localized pricing |
 
 ## Checkout result
 
@@ -62,6 +63,34 @@ interface CheckoutResult {
   subscription?: Subscription
   error?: Error
 }
+```
+
+## Imperative API
+
+You can also open checkout programmatically from anywhere — even outside React:
+
+```typescript
+// Via the global window object
+window.billingOS?.checkout.open({
+  priceId: "price_pro_monthly",
+  onSuccess: (subscription) => {
+    console.log("Subscribed!", subscription);
+  },
+  onError: (error) => {
+    console.error("Checkout failed:", error);
+  },
+});
+```
+
+Or using the exported function:
+
+```typescript
+import { openCheckout } from "@billingos/sdk";
+
+await openCheckout({
+  priceId: "price_pro_monthly",
+  sessionToken: "bos_session_test_...",
+});
 ```
 
 ## Example: Custom upgrade flow

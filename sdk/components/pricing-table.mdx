@@ -13,7 +13,7 @@ import { PricingTable } from "@billingos/sdk";
 ## Basic usage
 
 ```tsx
-<PricingTable useCheckoutModal={true} />
+<PricingTable />
 ```
 
 Fetches all your products and renders a complete pricing page with:
@@ -21,7 +21,9 @@ Fetches all your products and renders a complete pricing page with:
 - Monthly/yearly toggle
 - "Current Plan" badge for subscribed users
 - Upgrade/downgrade buttons
-- Built-in checkout modal
+- Built-in checkout modal (opens automatically on plan select)
+
+![PricingTable component](/images/pricing-table.png)
 
 ## Props
 
@@ -41,19 +43,11 @@ Fetches all your products and renders a complete pricing page with:
 </ResponseField>
 
 <ResponseField name="onSelectPlan" type="(priceId: string) => void">
-  Custom handler when a plan is selected. Overrides the default checkout behavior.
-</ResponseField>
-
-<ResponseField name="useCheckoutModal" type="boolean" default="false">
-  Open the `CheckoutModal` when a plan is selected (instead of the bottom sheet).
+  Custom handler when a plan is selected. When set, the built-in checkout modal won't open — you handle the flow yourself.
 </ResponseField>
 
 <ResponseField name="onPlanChanged" type="(subscription: any) => void">
   Called after a successful checkout or plan change.
-</ResponseField>
-
-<ResponseField name="theme" type="'light' | 'dark'" default="'light'">
-  Color theme for the pricing table.
 </ResponseField>
 
 <ResponseField name="title" type="string">
@@ -72,6 +66,14 @@ Fetches all your products and renders a complete pricing page with:
   </Expandable>
 </ResponseField>
 
+<ResponseField name="footerText" type="string | null">
+  Custom footer text below the pricing cards. Set to `null` to remove the footer entirely.
+</ResponseField>
+
+<ResponseField name="compact" type="boolean" default="false">
+  Compact layout for embedding in smaller spaces like sidebars.
+</ResponseField>
+
 ## Examples
 
 ### Filtered plans with yearly default
@@ -82,7 +84,6 @@ Fetches all your products and renders a complete pricing page with:
   defaultInterval="year"
   title="Simple, transparent pricing"
   description="Start free, upgrade when you're ready."
-  useCheckoutModal={true}
 />
 ```
 
@@ -91,7 +92,6 @@ Fetches all your products and renders a complete pricing page with:
 ```tsx
 <PricingTable
   onSelectPlan={(priceId) => {
-    // Navigate to a custom checkout page
     router.push(`/checkout?price=${priceId}`);
   }}
 />
@@ -101,11 +101,16 @@ Fetches all your products and renders a complete pricing page with:
 
 ```tsx
 <PricingTable
-  useCheckoutModal={true}
   customer={{ email: user.email, name: user.name }}
   onPlanChanged={(sub) => {
     toast.success("Subscribed!");
     router.push("/dashboard");
   }}
 />
+```
+
+### Compact mode
+
+```tsx
+<PricingTable compact={true} footerText={null} />
 ```

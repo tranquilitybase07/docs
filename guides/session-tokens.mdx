@@ -1,8 +1,10 @@
 ---
-title: Session Tokens
+title: Session tokens
 description: How BillingOS authenticates your customers without requiring a separate login.
 icon: key
 ---
+
+Session tokens are the bridge between your auth system and BillingOS. They let your customers interact with billing components without ever creating a BillingOS account — the SDK handles everything behind the scenes.
 
 ## What are session tokens?
 
@@ -10,7 +12,9 @@ Session tokens are short-lived credentials that identify one of your customers t
 
 **Why tokens instead of API keys?** API keys give full access to your organization's data. Session tokens are scoped to a single customer and expire after a set time — making them safe to use in the browser.
 
-## How it works
+## How the flow works
+
+![Session token flow](/images/session-token-flow.png)
 
 <Steps>
   <Step title="User visits a billing page">
@@ -20,7 +24,7 @@ Session tokens are short-lived credentials that identify one of your customers t
     The `BillingOSProvider` calls your server endpoint (e.g., `/api/billingos-session`) to get a token.
   </Step>
   <Step title="Your server creates the token">
-    Using the Node SDK, your server creates a session token tied to the user's ID.
+    Using the Node SDK and your secret key, your server creates a session token tied to the user's ID.
   </Step>
   <Step title="SDK uses the token">
     All subsequent API calls from the SDK include this token. No extra login for the user.
@@ -41,16 +45,29 @@ Session tokens are short-lived credentials that identify one of your customers t
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `externalUserId` | `string` | Yes | Your user's unique ID from your database |
-| `expiresIn` | `number` | No | Token lifetime in seconds (default: 3600 = 1 hour) |
+| `externalOrganizationId` | `string` | No | Organization ID for B2B scenarios |
+| `expiresIn` | `number` | No | Token lifetime in seconds (60–86400, default: 3600) |
+| `metadata` | `Record<string, any>` | No | Additional metadata (IP, user agent, etc.) |
 
 ### Response
 
 ```json
 {
-  "sessionToken": "bos_session_abc123...",
+  "sessionToken": "bos_session_test_abc123...",
   "expiresAt": "2025-01-15T12:00:00Z"
 }
 ```
+
+## Token prefixes and auto-routing
+
+Session tokens are automatically prefixed based on your API key environment:
+
+| API key prefix | Token prefix | Routes to |
+|----------------|-------------|-----------|
+| `sk_test_*` | `bos_session_test_*` | Sandbox API |
+| `sk_live_*` | `bos_session_live_*` | Production API |
+
+The React SDK reads the token prefix and routes requests to the correct API automatically — no URL configuration needed.
 
 ## Using tokens in the React SDK
 

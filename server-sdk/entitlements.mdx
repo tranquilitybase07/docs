@@ -16,7 +16,7 @@ if (!result.has_access) {
 }
 
 // For usage-based features, check the limit
-if (result.usage !== undefined && result.limit !== undefined) {
+if (result.usage !== null && result.limit !== null) {
   if (result.usage >= result.limit) {
     return Response.json({ error: "Usage limit exceeded" }, { status: 429 });
   }
@@ -27,18 +27,23 @@ if (result.usage !== undefined && result.limit !== undefined) {
 
 | Name | Type | Description |
 |------|------|-------------|
-| `customerId` | `string` | Customer or external user ID |
+| `customerId` | `string` | Customer external user ID |
 | `featureKey` | `string` | Feature key to check |
 
 ### Response
 
 ```typescript
-{
-  feature_key: "api_calls",
-  has_access: true,
-  limit: 1000,      // undefined for boolean features
-  usage: 450,       // undefined for boolean features
-  metadata: {}
+interface EntitlementResponse {
+  feature_key: string
+  has_access: boolean
+  reason?: string          // Reason if access denied
+  limit: number | null     // null for boolean features
+  usage: number | null     // null for boolean features
+  metadata: {
+    remaining?: number
+    resets_at?: string
+    type?: string
+  } | null
 }
 ```
 

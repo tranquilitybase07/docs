@@ -36,29 +36,34 @@ function CustomPricingPage() {
 }
 ```
 
-## Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| `planIds` | `string[]` | Optional — filter to specific product IDs |
-
 ## Return type
 
 ```typescript
-interface Product {
+interface PricingProduct {
   id: string
   name: string
-  description?: string
-  features?: string[]
-  prices?: Price[]
+  description: string
+  prices: PricingPrice[]
+  features: PricingFeature[]
+  isCurrentPlan: boolean
+  trialDays: number
+  highlighted?: boolean
 }
 
-interface Price {
+interface PricingPrice {
   id: string
-  amount: number       // In cents (e.g., 2900 = $29.00)
-  currency: string     // e.g., "usd"
-  interval?: string    // "month" | "year" | "week" | "day"
-  interval_count?: number
+  amount: number        // In cents (e.g., 2900 = $29.00)
+  currency: string      // e.g., "usd"
+  interval: "month" | "year" | "week" | "day"
+  intervalCount: number
+}
+
+interface PricingFeature {
+  id: string
+  name: string
+  title: string
+  type: "boolean_flag" | "usage_quota" | "numeric_limit"
+  properties: Record<string, any>
 }
 ```
 

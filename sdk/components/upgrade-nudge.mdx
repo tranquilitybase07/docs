@@ -22,6 +22,8 @@ import { UpgradeNudge } from "@billingos/sdk";
 
 Displays an upgrade prompt when usage data indicates the user should upgrade. Supports three display styles.
 
+![Upgrade nudge](/images/upgrade-nudge.png)
+
 ## Props
 
 <ResponseField name="trigger" type="NudgeTrigger" required>
@@ -78,15 +80,15 @@ Displays an upgrade prompt when usage data indicates the user should upgrade. Su
 ## Example: Auto-check and show nudge
 
 ```tsx
-import { UpgradeNudge } from "@billingos/sdk";
-import { useBillingOS } from "@billingos/sdk";
+import { UpgradeNudge, useBillingOS } from "@billingos/sdk";
 import { useQuery } from "@tanstack/react-query";
 
 function NudgeWrapper() {
   const { client } = useBillingOS();
   const { data } = useQuery({
     queryKey: ["usage-check"],
-    queryFn: () => client.checkUsage(),
+    queryFn: () => client!.checkUsage(),
+    enabled: !!client,
   });
 
   if (!data?.shouldShowNudge || !data.trigger) return null;
@@ -96,7 +98,6 @@ function NudgeWrapper() {
       trigger={data.trigger}
       style="banner"
       onUpgrade={(priceId) => {
-        // Open checkout with the suggested plan
         router.push(`/pricing?upgrade=${priceId}`);
       }}
       onDismiss={() => {
