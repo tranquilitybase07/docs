@@ -1,0 +1,86 @@
+---
+title: useCheckout
+description: Programmatic checkout for custom payment flows.
+icon: credit-card
+---
+
+## Import
+
+```tsx
+import { useCheckout } from "@billingos/sdk";
+```
+
+## Usage
+
+```tsx
+function UpgradeButton({ priceId }: { priceId: string }) {
+  const { openCheckout, isLoading, error } = useCheckout();
+
+  const handleClick = async () => {
+    const result = await openCheckout({
+      priceId,
+      customer: { email: "user@example.com" },
+    });
+
+    if (result.success) {
+      toast.success("Payment successful!");
+    }
+  };
+
+  return (
+    <button onClick={handleClick} disabled={isLoading}>
+      {isLoading ? "Processing..." : "Upgrade"}
+    </button>
+  );
+}
+```
+
+## Return value
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `openCheckout` | `(options) => Promise<CheckoutResult>` | Opens the checkout flow |
+| `closeCheckout` | `() => void` | Closes the checkout |
+| `isLoading` | `boolean` | Whether checkout is in progress |
+| `error` | `Error \| null` | Last error, if any |
+
+## Checkout options
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `priceId` | `string` | Yes | The price to charge |
+| `customer` | `{ email?, name?, taxId? }` | No | Prefill customer info |
+| `couponCode` | `string` | No | Discount code |
+| `existingSubscriptionId` | `string` | No | For upgrades/downgrades |
+| `metadata` | `Record<string, string>` | No | Custom data |
+
+## Checkout result
+
+```typescript
+interface CheckoutResult {
+  success: boolean
+  subscription?: Subscription
+  error?: Error
+}
+```
+
+## Example: Custom upgrade flow
+
+```tsx
+function PlanCard({ plan }) {
+  const { openCheckout, isLoading } = useCheckout();
+
+  return (
+    <div className="border rounded p-6">
+      <h3>{plan.name}</h3>
+      <p>${plan.price}/mo</p>
+      <button
+        onClick={() => openCheckout({ priceId: plan.priceId })}
+        disabled={isLoading}
+      >
+        {plan.isCurrentPlan ? "Current" : "Choose Plan"}
+      </button>
+    </div>
+  );
+}
+```

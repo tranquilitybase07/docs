@@ -1,0 +1,40 @@
+---
+title: Reactivate Subscription
+description: Reactivate a cancelled subscription before the billing period ends.
+---
+
+## POST /v1/subscriptions/:id/reactivate
+
+Reactivates a subscription that was cancelled but hasn't reached its period end yet. Removes the `cancel_at_period_end` flag.
+
+### Authentication
+
+Requires a session token (`bos_session_...`) or API key (`sk_...`).
+
+### Path parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Subscription ID |
+
+### Response
+
+```json
+{
+  "id": "sub_123",
+  "status": "active",
+  "cancel_at_period_end": false,
+  "current_period_end": "2025-02-01T00:00:00Z"
+}
+```
+
+### Example
+
+```bash
+curl -X POST https://api.billingos.com/v1/subscriptions/sub_123/reactivate \
+  -H "Authorization: Bearer sk_test_abc123"
+```
+
+<Note>
+  Reactivation only works for subscriptions with `cancel_at_period_end: true` that haven't reached their `current_period_end` date. Subscriptions that have already ended cannot be reactivated — create a new subscription instead.
+</Note>

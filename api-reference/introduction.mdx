@@ -1,33 +1,80 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: API Reference
+description: Complete REST API documentation for BillingOS.
+icon: code
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Base URL
 
-## Welcome
+```
+https://api.billingos.com/v1
+```
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+For local development:
+```
+http://localhost:3001/v1
+```
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All API requests require authentication via the `Authorization` header:
+
+```bash
+Authorization: Bearer <token>
+```
+
+Two types of tokens:
+- **Session tokens** (`bos_session_...`) — for client-side SDK calls, scoped to one customer
+- **API keys** (`sk_test_...` / `sk_live_...`) — for server-side calls, full organization access
+
+## Request format
+
+- Content-Type: `application/json`
+- All request bodies are JSON
+- All responses are JSON
+
+## Response format
+
+Successful responses:
 
 ```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+{
+  "data": { ... }
+}
 ```
+
+Paginated responses:
+
+```json
+{
+  "data": [ ... ],
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 5
+  }
+}
+```
+
+Error responses:
+
+```json
+{
+  "error": {
+    "message": "Description of what went wrong",
+    "code": "ERROR_CODE",
+    "details": { ... }
+  }
+}
+```
+
+## Endpoints overview
+
+| Group | Endpoints |
+|-------|----------|
+| [Checkout](/api-reference/checkout/create) | Create sessions, confirm payments, check status |
+| [Products](/api-reference/products/list) | List products and pricing |
+| [Features](/api-reference/features/check) | Check entitlements, track usage, view metrics |
+| [Portal](/api-reference/portal/create) | Customer portal sessions |
+| [Subscriptions](/api-reference/subscriptions/cancel) | Cancel and reactivate subscriptions |

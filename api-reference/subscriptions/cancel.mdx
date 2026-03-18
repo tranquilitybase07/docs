@@ -1,0 +1,49 @@
+---
+title: Cancel Subscription
+description: Cancel a subscription immediately or at the end of the billing period.
+---
+
+## POST /v1/subscriptions/:id/cancel
+
+Cancels a subscription. By default, the subscription remains active until the end of the current billing period.
+
+### Authentication
+
+Requires a session token (`bos_session_...`) or API key (`sk_...`).
+
+### Path parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | `string` | Subscription ID |
+
+### Request body
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `immediately` | `boolean` | `false` | Cancel immediately instead of at period end |
+| `cancellationReason` | `string` | — | Reason: `too_expensive`, `missing_features`, `found_alternative`, `no_longer_needed`, `other` |
+| `feedback` | `string` | — | Free-text feedback |
+
+### Response
+
+```json
+{
+  "id": "sub_123",
+  "status": "active",
+  "cancel_at_period_end": true,
+  "current_period_end": "2025-02-01T00:00:00Z"
+}
+```
+
+### Example
+
+```bash
+curl -X POST https://api.billingos.com/v1/subscriptions/sub_123/cancel \
+  -H "Authorization: Bearer sk_test_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "immediately": false,
+    "cancellationReason": "too_expensive"
+  }'
+```

@@ -1,0 +1,94 @@
+---
+title: Usage Tracking
+description: Track metered usage from your server for reliable billing.
+icon: chart-line
+---
+
+## trackUsage
+
+Record a usage event. Server-side tracking is recommended for accuracy — it can't be bypassed or lost due to client issues.
+
+```typescript
+await billing.trackUsage({
+  customerId: "cus_123",
+  featureKey: "api_calls",
+  quantity: 1,
+});
+```
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `customerId` | `string` | Yes | Customer ID |
+| `featureKey` | `string` | Yes | Which feature was used |
+| `quantity` | `number` | Yes | How many units to track |
+| `timestamp` | `string` | No | ISO timestamp (defaults to now) |
+| `idempotency_key` | `string` | No | Prevent duplicate tracking |
+| `metadata` | `Record<string, string>` | No | Additional context |
+
+### Idempotency
+
+Pass an `idempotency_key` to prevent duplicate events (e.g., from retries):
+
+```typescript
+await billing.trackUsage({
+  customerId: "cus_123",
+  featureKey: "api_calls",
+  quantity: 1,
+  idempotency_key: `api-call-${requestId}`,
+});
+```
+
+---
+
+## getUsageMetrics
+
+Fetch current usage metrics for a customer.
+
+```typescript
+const metrics = await billing.getUsageMetrics("cus_123", "api_calls");
+
+// metrics.current_usage: 450
+// metrics.limit: 1000
+// metrics.period_start: "2025-01-01T00:00:00Z"
+// metrics.period_end: "2025-02-01T00:00:00Z"
+```
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `customerId` | `string` | Yes | Customer ID |
+| `featureKey` | `string` | Yes | Feature to get metrics for |
+
+## Example: Track + check in one flow
+
+```typescript
+export async function POST(request: Request) {
+  const userId = getAuthenticatedUser(request);
+
+  // Check if user has remaining quota
+  const entitlement = await billing.checkEntitlement(userId, "api_calls");
+
+  if (!entitlement.has_access) {
+    return Response.json({ error: "Plan upgrade required" }, { status: 403 });
+  }
+
+  if (entitlement.usage >= entitlement.limit) {
+    return Response.json({ error: "API call limit reached" }, { status: 429 });
+  }
+
+  // Do the work
+  const result = await processApiCall(request);
+
+  // Track the usage
+  await billing.trackUsage({
+    customerId: userId,
+    featureKey: "api_calls",
+    quantity: 1,
+  });
+
+  return Response.json(result);
+}
+```

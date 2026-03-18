@@ -1,0 +1,108 @@
+---
+title: UpgradeNudge
+description: Automated upgrade prompts triggered when users approach plan limits.
+icon: bell
+---
+
+## Import
+
+```tsx
+import { UpgradeNudge } from "@billingos/sdk";
+```
+
+## Basic usage
+
+```tsx
+<UpgradeNudge
+  trigger={nudgeTrigger}
+  style="banner"
+  onUpgrade={(priceId) => openCheckout(priceId)}
+/>
+```
+
+Displays an upgrade prompt when usage data indicates the user should upgrade. Supports three display styles.
+
+## Props
+
+<ResponseField name="trigger" type="NudgeTrigger" required>
+  The nudge trigger data, typically from the `checkUsage()` API response.
+  <Expandable>
+    <ResponseField name="type" type="'usage_threshold' | 'feature_access' | 'time_based' | 'custom'">
+      What triggered the nudge.
+    </ResponseField>
+    <ResponseField name="feature" type="string">Feature key that triggered the nudge.</ResponseField>
+    <ResponseField name="threshold" type="number">Usage threshold percentage.</ResponseField>
+    <ResponseField name="actual" type="number">Actual usage percentage.</ResponseField>
+    <ResponseField name="message" type="object">
+      <Expandable>
+        <ResponseField name="title" type="string">Nudge title</ResponseField>
+        <ResponseField name="body" type="string">Nudge description</ResponseField>
+        <ResponseField name="cta" type="string">Call-to-action button text</ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="suggestedPlan" type="object">
+      <Expandable>
+        <ResponseField name="id" type="string">Plan ID</ResponseField>
+        <ResponseField name="priceId" type="string">Price ID for checkout</ResponseField>
+        <ResponseField name="name" type="string">Plan name</ResponseField>
+        <ResponseField name="price" type="object">Amount, currency, interval</ResponseField>
+        <ResponseField name="highlights" type="string[]">Key benefits</ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="style" type="'banner' | 'toast' | 'modal'" default="'banner'">
+  Display style:
+  - `banner` — Top banner, non-intrusive
+  - `toast` — Bottom-right notification
+  - `modal` — Centered dialog, more prominent
+</ResponseField>
+
+<ResponseField name="autoDismiss" type="number" default="0">
+  Auto-dismiss after N milliseconds. `0` means no auto-dismiss.
+</ResponseField>
+
+<ResponseField name="onUpgrade" type="(priceId: string) => void">
+  Called when the user clicks the upgrade button.
+</ResponseField>
+
+<ResponseField name="onDismiss" type="() => void">
+  Called when the user dismisses the nudge.
+</ResponseField>
+
+<ResponseField name="theme" type="'light' | 'dark'">
+  Color theme.
+</ResponseField>
+
+## Example: Auto-check and show nudge
+
+```tsx
+import { UpgradeNudge } from "@billingos/sdk";
+import { useBillingOS } from "@billingos/sdk";
+import { useQuery } from "@tanstack/react-query";
+
+function NudgeWrapper() {
+  const { client } = useBillingOS();
+  const { data } = useQuery({
+    queryKey: ["usage-check"],
+    queryFn: () => client.checkUsage(),
+  });
+
+  if (!data?.shouldShowNudge || !data.trigger) return null;
+
+  return (
+    <UpgradeNudge
+      trigger={data.trigger}
+      style="banner"
+      onUpgrade={(priceId) => {
+        // Open checkout with the suggested plan
+        router.push(`/pricing?upgrade=${priceId}`);
+      }}
+      onDismiss={() => {
+        // Optionally track dismissal
+      }}
+    />
+  );
+}
+```

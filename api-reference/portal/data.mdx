@@ -1,0 +1,68 @@
+---
+title: Portal Data
+description: Get aggregated portal data for a customer.
+---
+
+## GET /v1/portal/:sessionId/data
+
+Returns all data needed for the customer portal — subscription details, invoices, payment methods, and available plans.
+
+### Path parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sessionId` | `string` | Portal session ID |
+
+### Response
+
+```json
+{
+  "subscription": {
+    "id": "sub_123",
+    "status": "active",
+    "product": { "id": "prod_123", "name": "Pro Plan" },
+    "price": { "amount": 2900, "currency": "usd", "interval": "month" },
+    "currentPeriodStart": "2025-01-01T00:00:00Z",
+    "currentPeriodEnd": "2025-02-01T00:00:00Z",
+    "cancelAtPeriodEnd": false,
+    "features": [
+      {
+        "name": "API Calls",
+        "type": "usage_quota",
+        "limit": 1000,
+        "usage": 450
+      }
+    ]
+  },
+  "invoices": [
+    {
+      "id": "inv_123",
+      "amount_due": 2900,
+      "currency": "usd",
+      "status": "paid",
+      "paid_at": "2025-01-01T00:00:00Z",
+      "invoice_pdf": "https://..."
+    }
+  ],
+  "paymentMethods": [
+    {
+      "id": "pm_123",
+      "type": "card",
+      "card": { "brand": "visa", "last4": "4242", "exp_month": 12, "exp_year": 2026 },
+      "is_default": true
+    }
+  ],
+  "customer": {
+    "email": "user@example.com",
+    "name": "Jane Smith"
+  },
+  "availablePlans": []
+}
+```
+
+### Example
+
+```bash
+curl https://api.billingos.com/v1/portal/portal_session_abc123/data \
+  -H "Authorization: Bearer bos_session_abc123"
+```

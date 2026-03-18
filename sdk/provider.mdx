@@ -1,0 +1,109 @@
+---
+title: BillingOSProvider
+description: The provider component that connects the SDK to your app.
+icon: plug
+---
+
+## Overview
+
+`BillingOSProvider` is a React context provider that initializes the BillingOS SDK client and makes it available to all child components and hooks.
+
+**You must wrap your app with this provider** before using any BillingOS components or hooks.
+
+## Basic setup
+
+<Steps>
+  <Step title="Create a session token endpoint">
+    <Snippet file="session-token-endpoint.mdx" />
+  </Step>
+  <Step title="Create a providers file">
+    <Snippet file="provider-setup.mdx" />
+  </Step>
+  <Step title="Wrap your layout">
+    ```tsx app/layout.tsx
+    import { Providers } from "./providers";
+
+    export default function RootLayout({ children }: { children: React.ReactNode }) {
+      return (
+        <html>
+          <body>
+            <Providers>{children}</Providers>
+          </body>
+        </html>
+      );
+    }
+    ```
+  </Step>
+</Steps>
+
+## Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `sessionTokenUrl` | `string` | One of `sessionTokenUrl` or `sessionToken` | URL to fetch session tokens from your server |
+| `sessionToken` | `string` | One of `sessionTokenUrl` or `sessionToken` | A session token string (manual mode) |
+| `sessionTokenOptions` | `object` | No | Options for token fetching behavior |
+| `customerId` | `string` | No | Override the customer ID |
+| `customerEmail` | `string` | No | Customer's email address |
+| `customerName` | `string` | No | Customer's display name |
+| `organizationId` | `string` | No | Your BillingOS organization ID |
+| `options` | `BillingOSClientOptions` | No | SDK client configuration |
+| `queryClient` | `QueryClient` | No | Custom TanStack Query client |
+| `children` | `ReactNode` | Yes | Your app content |
+
+### Client options
+
+```tsx
+<BillingOSProvider
+  sessionTokenUrl="/api/billingos-session"
+  options={{
+    baseUrl: "https://api.billingos.com",  // Custom API URL
+    timeout: 30000,                         // Request timeout in ms
+  }}
+>
+  {children}
+</BillingOSProvider>
+```
+
+## Automatic vs manual tokens
+
+### Automatic (recommended)
+
+```tsx
+<BillingOSProvider sessionTokenUrl="/api/billingos-session">
+```
+
+The SDK calls your endpoint, stores the token, and refreshes it before expiry. Zero maintenance.
+
+### Manual
+
+```tsx
+<BillingOSProvider sessionToken={myToken}>
+```
+
+You manage token fetching and refresh yourself. Useful if you have a custom auth setup.
+
+## Accessing the context
+
+Use the `useBillingOS` hook to access the SDK client from any component:
+
+```tsx
+import { useBillingOS } from "@billingos/sdk";
+
+function MyComponent() {
+  const { client, customerId } = useBillingOS();
+
+  // Use client for custom API calls
+  const subscription = await client.getSubscription("sub_123");
+}
+```
+
+### Context values
+
+| Value | Type | Description |
+|-------|------|-------------|
+| `client` | `BillingOSClient` | The SDK client instance |
+| `customerId` | `string \| undefined` | Current customer's ID |
+| `customerEmail` | `string \| undefined` | Customer's email |
+| `customerName` | `string \| undefined` | Customer's name |
+| `organizationId` | `string \| undefined` | Organization ID |

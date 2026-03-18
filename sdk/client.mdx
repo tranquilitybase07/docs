@@ -1,0 +1,142 @@
+---
+title: BillingOSClient
+description: Low-level API client for advanced use cases and custom integrations.
+icon: terminal
+---
+
+## Overview
+
+The `BillingOSClient` class provides direct access to all BillingOS API methods. Use it when you need more control than hooks and components provide.
+
+<Note>
+  Most apps should use the [hooks](/sdk/hooks/use-subscription) and [components](/sdk/components/pricing-table) instead. The client is for advanced use cases like custom data fetching, server-side rendering, or non-React integrations.
+</Note>
+
+## Access the client
+
+```tsx
+import { useBillingOS } from "@billingos/sdk";
+
+function MyComponent() {
+  const { client } = useBillingOS();
+
+  // Use client methods directly
+  const subscription = await client.getSubscription("sub_123");
+}
+```
+
+Or create a standalone client:
+
+```tsx
+import { createBillingOSClient } from "@billingos/sdk";
+
+const client = createBillingOSClient("bos_session_xxx", {
+  baseUrl: "https://api.billingos.com",
+});
+```
+
+## Constructor options
+
+```typescript
+interface BillingOSClientOptions {
+  baseUrl?: string               // API base URL
+  environment?: "production" | "sandbox"
+  version?: string               // API version
+  headers?: Record<string, string>  // Custom headers
+  timeout?: number               // Request timeout (ms)
+}
+```
+
+## Methods
+
+### Customers
+
+| Method | Description |
+|--------|-------------|
+| `createCustomer(input)` | Create a new customer |
+| `getCustomer(id)` | Get a customer by ID |
+| `listCustomers(params?)` | List customers (paginated) |
+| `updateCustomer(id, input)` | Update customer details |
+| `deleteCustomer(id)` | Delete a customer |
+
+### Subscriptions
+
+| Method | Description |
+|--------|-------------|
+| `createSubscription(input)` | Create a subscription |
+| `getSubscription(id)` | Get a subscription |
+| `listSubscriptions(params?)` | List subscriptions (paginated) |
+| `cancelSubscription(id, immediately?)` | Cancel a subscription |
+| `reactivateSubscription(id)` | Reactivate a cancelled subscription |
+| `getAvailablePlans(subscriptionId)` | Get upgrade/downgrade options |
+| `previewPlanChange(subId, input)` | Preview plan change proration |
+| `changePlan(subId, input)` | Execute a plan change |
+
+### Entitlements & Features
+
+| Method | Description |
+|--------|-------------|
+| `checkEntitlement(input)` | Check if a customer has access to a feature |
+| `listEntitlements(customerId?)` | List all entitlements |
+
+### Usage Tracking
+
+| Method | Description |
+|--------|-------------|
+| `trackUsage(event)` | Track a usage event |
+| `getUsageMetrics(customerId?, featureKey?)` | Get usage metrics |
+
+### Invoices
+
+| Method | Description |
+|--------|-------------|
+| `getInvoice(id)` | Get an invoice |
+| `listInvoices(params?)` | List invoices (paginated) |
+
+### Payment Methods
+
+| Method | Description |
+|--------|-------------|
+| `listPaymentMethods(customerId)` | List payment methods |
+| `removePaymentMethod(id)` | Remove a payment method |
+| `setDefaultPaymentMethod(id)` | Set the default payment method |
+
+### Checkout
+
+| Method | Description |
+|--------|-------------|
+| `createCheckout(input)` | Create a checkout session |
+| `confirmCheckout(clientSecret, paymentMethodId)` | Confirm a payment |
+
+### Checkout Modal (iframe)
+
+Access via `client.checkout.*`:
+
+| Method | Description |
+|--------|-------------|
+| `checkout.createSession(input)` | Create a checkout session for the modal |
+| `checkout.getSession(sessionId)` | Get session details |
+| `checkout.confirmPayment(secret, pmId)` | Confirm payment |
+| `checkout.applyCoupon(sessionId, code)` | Apply a coupon code |
+
+### Portal (iframe)
+
+Access via `client.portal.*`:
+
+| Method | Description |
+|--------|-------------|
+| `portal.createSession(input?)` | Create a portal session |
+| `portal.getSessionStatus(sessionId)` | Check session validity |
+| `portal.getPortalData(sessionId)` | Get aggregated portal data |
+
+### Pricing
+
+| Method | Description |
+|--------|-------------|
+| `getProducts(planIds?)` | Fetch products for pricing table |
+
+### Upgrade Nudge
+
+| Method | Description |
+|--------|-------------|
+| `checkUsage()` | Check if an upgrade nudge should be shown |

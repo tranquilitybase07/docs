@@ -1,0 +1,67 @@
+---
+title: Session Tokens
+description: Create and manage session tokens for authenticating customers.
+icon: key
+---
+
+## createSessionToken
+
+Create a session token to authenticate a customer with the React SDK.
+
+```typescript
+const { sessionToken, expiresAt } = await billing.createSessionToken({
+  externalUserId: "user_123",
+  expiresIn: 3600,
+});
+```
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `externalUserId` | `string` | Yes | Your user's unique ID |
+| `expiresIn` | `number` | No | Token lifetime in seconds (default: 3600) |
+
+### Response
+
+```typescript
+{
+  sessionToken: "bos_session_abc123...",
+  expiresAt: "2025-01-15T12:00:00Z"
+}
+```
+
+## Next.js example
+
+```typescript app/api/billingos-session/route.ts
+import { BillingOS } from "@billingos/node";
+import { getServerSession } from "next-auth";
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+
+export async function GET() {
+  const session = await getServerSession();
+
+  if (!session?.user?.id) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { sessionToken, expiresAt } = await billing.createSessionToken({
+    externalUserId: session.user.id,
+    expiresIn: 3600,
+  });
+
+  return Response.json({ sessionToken, expiresAt });
+}
+```
+
+## Token format
+
+Session tokens follow this format: `bos_session_{payload}.{signature}`
+
+- Tokens are short-lived (default: 1 hour)
+- Each token is scoped to a single customer
+- Tokens are verified on every API call
+- Expired tokens are automatically rejected

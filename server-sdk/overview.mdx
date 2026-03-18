@@ -1,0 +1,79 @@
+---
+title: Node SDK Overview
+description: Server-side SDK for session tokens, entitlements, and usage tracking.
+icon: server
+---
+
+## What is the Node SDK?
+
+The `@billingos/node` package runs on your server. Use it to:
+
+- **Create session tokens** — authenticate your users with BillingOS
+- **Check entitlements** — verify feature access in API routes
+- **Track usage** — record metered usage from your backend
+- **Manage customers** — create and update customer records
+- **Manage subscriptions** — create, cancel, and modify subscriptions
+
+## Installation
+
+<CodeGroup>
+```bash npm
+npm install @billingos/node
+```
+
+```bash pnpm
+pnpm add @billingos/node
+```
+</CodeGroup>
+
+## Initialize
+
+```typescript
+import { BillingOS } from "@billingos/node";
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `secretKey` | `string` | Required | Your BillingOS secret key |
+| `apiUrl` | `string` | `https://api.billingos.com` | API base URL |
+| `timeout` | `number` | `30000` | Request timeout in ms |
+| `maxRetries` | `number` | `3` | Max retry attempts |
+
+## Quick examples
+
+### Create a session token
+
+```typescript
+const { sessionToken, expiresAt } = await billing.createSessionToken({
+  externalUserId: "user_123",
+  expiresIn: 3600,
+});
+```
+
+### Check a feature entitlement
+
+```typescript
+const result = await billing.checkEntitlement("user_123", "api_calls");
+
+if (result.has_access) {
+  // Allow the operation
+} else {
+  // Return 403
+}
+```
+
+### Track usage
+
+```typescript
+await billing.trackUsage({
+  customerId: "user_123",
+  featureKey: "api_calls",
+  quantity: 1,
+});
+```

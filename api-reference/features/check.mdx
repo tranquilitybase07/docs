@@ -1,0 +1,37 @@
+---
+title: Check Feature Access
+description: Check if the current customer has access to a feature.
+---
+
+## GET /v1/features/check
+
+Returns whether the authenticated customer has access to a specific feature, along with usage data for metered features.
+
+### Authentication
+
+Requires a session token (`bos_session_...`).
+
+### Query parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `feature_key` | `string` | Yes | Feature key to check |
+
+### Response
+
+```json
+{
+  "feature_key": "api_calls",
+  "has_access": true,
+  "limit": 1000,
+  "usage": 450,
+  "metadata": {}
+}
+```
+
+### Example
+
+```bash
+curl "https://api.billingos.com/v1/features/check?feature_key=api_calls" \
+  -H "Authorization: Bearer bos_session_abc123"
+```

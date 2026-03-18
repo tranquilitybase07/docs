@@ -1,0 +1,170 @@
+---
+title: useSubscription
+description: Hooks for fetching and managing subscriptions.
+icon: repeat
+---
+
+## Hooks
+
+### useSubscription
+
+Fetch a single subscription by ID.
+
+```tsx
+import { useSubscription } from "@billingos/sdk";
+
+function SubscriptionDetails({ id }: { id: string }) {
+  const { data, isLoading } = useSubscription(id);
+
+  if (isLoading) return <Spinner />;
+
+  return (
+    <div>
+      <p>Status: {data.status}</p>
+      <p>Renews: {new Date(data.current_period_end).toLocaleDateString()}</p>
+    </div>
+  );
+}
+```
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| `id` | `string` | Subscription ID |
+| `options` | `UseQueryOptions` | TanStack Query options |
+
+**Returns:** `UseQueryResult<Subscription>`
+
+---
+
+### useSubscriptions
+
+Fetch a paginated list of subscriptions.
+
+```tsx
+const { data } = useSubscriptions({ page: 1, page_size: 10 });
+```
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| `params.customer_id` | `string` | Filter by customer |
+| `params.page` | `number` | Page number |
+| `params.page_size` | `number` | Items per page |
+
+**Returns:** `UseQueryResult<PaginatedResponse<Subscription>>`
+
+---
+
+### useCreateSubscription
+
+Create a new subscription.
+
+```tsx
+const { mutateAsync: createSubscription } = useCreateSubscription();
+
+await createSubscription({
+  customer_id: "cus_123",
+  price_id: "price_pro_monthly",
+  trial_days: 14,
+});
+```
+
+---
+
+### useCancelSubscription
+
+Cancel a subscription.
+
+```tsx
+const { mutateAsync: cancel } = useCancelSubscription(subscriptionId);
+
+// Cancel at end of billing period
+await cancel({ immediately: false });
+
+// Cancel immediately
+await cancel({ immediately: true });
+```
+
+---
+
+### useReactivateSubscription
+
+Reactivate a cancelled subscription (before the period ends).
+
+```tsx
+const { mutateAsync: reactivate } = useReactivateSubscription(subscriptionId);
+
+await reactivate();
+```
+
+---
+
+### useAvailablePlans
+
+Fetch available upgrade and downgrade options for a subscription.
+
+```tsx
+const { data } = useAvailablePlans(subscriptionId);
+
+// data.available_upgrades: AvailablePlan[]
+// data.available_downgrades: AvailablePlan[]
+// data.current_plan: { product_name, price_id, amount, interval }
+```
+
+---
+
+### usePreviewPlanChange
+
+Preview what a plan change will cost (proration, next invoice, etc.).
+
+```tsx
+const { mutateAsync: preview } = usePreviewPlanChange();
+
+const result = await preview({
+  subscriptionId: "sub_123",
+  input: { new_price_id: "price_enterprise_monthly" },
+});
+
+// result.proration.amount — proration charge/credit
+// result.change_type — "upgrade" | "downgrade"
+// result.next_billing_date
+```
+
+---
+
+### useChangePlan
+
+Execute a plan change.
+
+```tsx
+const { mutateAsync: changePlan } = useChangePlan();
+
+await changePlan({
+  subscriptionId: "sub_123",
+  input: {
+    new_price_id: "price_enterprise_monthly",
+    effective_date: "immediate", // or "period_end"
+  },
+});
+```
+
+## Subscription object
+
+```typescript
+interface Subscription {
+  id: string
+  customer_id: string
+  price_id: string
+  status: "active" | "canceled" | "incomplete" | "past_due" | "trialing" | "unpaid"
+  current_period_start: string
+  current_period_end: string
+  cancel_at_period_end: boolean
+  trial_start?: string
+  trial_end?: string
+  canceled_at?: string
+  metadata?: Record<string, string>
+  created_at: string
+  updated_at: string
+}
+```

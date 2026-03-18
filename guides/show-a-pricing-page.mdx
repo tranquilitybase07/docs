@@ -1,0 +1,129 @@
+---
+title: Show a Pricing Page
+description: Display your plans with a single component. Customize layout, toggle monthly/yearly, and handle plan selection.
+icon: tags
+---
+
+## Basic pricing page
+
+The `PricingTable` component fetches your products and renders a complete pricing page. No configuration needed.
+
+```tsx
+import { PricingTable } from "@billingos/sdk";
+
+export default function PricingPage() {
+  return <PricingTable useCheckoutModal={true} />;
+}
+```
+
+This gives you:
+- All your active products displayed as pricing cards
+- Feature comparison across plans
+- Monthly/yearly interval toggle
+- "Current Plan" badge for subscribed users
+- Upgrade/downgrade buttons
+- Built-in checkout modal when a plan is selected
+
+## Customization
+
+### Show specific plans only
+
+Filter which products appear using `planIds`:
+
+```tsx
+<PricingTable
+  planIds={["prod_starter", "prod_pro", "prod_enterprise"]}
+  useCheckoutModal={true}
+/>
+```
+
+### Set the default billing interval
+
+```tsx
+<PricingTable
+  defaultInterval="year"      // Show yearly pricing first
+  showIntervalToggle={true}   // Let users switch to monthly
+  useCheckoutModal={true}
+/>
+```
+
+### Add a title and description
+
+```tsx
+<PricingTable
+  title="Simple, transparent pricing"
+  description="Start free, upgrade when you're ready."
+  useCheckoutModal={true}
+/>
+```
+
+### Theme
+
+```tsx
+<PricingTable
+  theme="dark"  // "light" | "dark"
+  useCheckoutModal={true}
+/>
+```
+
+### Prefill customer info
+
+Skip the email step in checkout by passing customer data:
+
+```tsx
+<PricingTable
+  customer={{
+    email: "user@example.com",
+    name: "Jane Smith",
+  }}
+  useCheckoutModal={true}
+/>
+```
+
+## Handle plan selection
+
+### With checkout modal (recommended)
+
+Set `useCheckoutModal={true}` and the checkout modal opens automatically when a user selects a plan. Handle success with `onPlanChanged`:
+
+```tsx
+<PricingTable
+  useCheckoutModal={true}
+  onPlanChanged={(subscription) => {
+    console.log("Subscribed!", subscription);
+    // Redirect to dashboard, show success message, etc.
+  }}
+/>
+```
+
+### Custom action
+
+If you want full control over what happens when a plan is clicked:
+
+```tsx
+<PricingTable
+  onSelectPlan={(priceId) => {
+    // Do whatever you want — redirect, open a custom modal, etc.
+    console.log("Selected price:", priceId);
+  }}
+/>
+```
+
+<Note>
+  When `onSelectPlan` is set, the checkout modal won't open automatically. You handle the flow yourself.
+</Note>
+
+## Props reference
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `planIds` | `string[]` | All products | Filter which products to show |
+| `showIntervalToggle` | `boolean` | `true` | Show monthly/yearly toggle |
+| `defaultInterval` | `"month" \| "year"` | `"month"` | Default billing interval |
+| `onSelectPlan` | `(priceId: string) => void` | — | Custom handler for plan selection |
+| `useCheckoutModal` | `boolean` | `false` | Open checkout modal on plan select |
+| `onPlanChanged` | `(subscription: any) => void` | — | Called after successful checkout |
+| `theme` | `"light" \| "dark"` | `"light"` | Color theme |
+| `title` | `string` | — | Heading above the pricing table |
+| `description` | `string` | — | Subheading below the title |
+| `customer` | `{ email?: string; name?: string }` | — | Prefill customer info in checkout |

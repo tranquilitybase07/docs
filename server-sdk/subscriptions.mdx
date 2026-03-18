@@ -1,0 +1,86 @@
+---
+title: Subscriptions
+description: Create and manage subscriptions server-side.
+icon: repeat
+---
+
+## createSubscription
+
+```typescript
+const subscription = await billing.createSubscription({
+  customer_id: "cus_123",
+  price_id: "price_pro_monthly",
+  trial_days: 14,
+});
+```
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `customer_id` | `string` | Yes | Customer ID |
+| `price_id` | `string` | Yes | Price ID to subscribe to |
+| `trial_days` | `number` | No | Free trial duration |
+| `metadata` | `Record<string, string>` | No | Custom key-value pairs |
+
+---
+
+## getSubscription
+
+```typescript
+const subscription = await billing.getSubscription("sub_123");
+```
+
+---
+
+## listSubscriptions
+
+```typescript
+const { data, meta } = await billing.listSubscriptions({
+  customer_id: "cus_123",
+  page: 1,
+  page_size: 10,
+});
+```
+
+---
+
+## cancelSubscription
+
+```typescript
+// Cancel at end of billing period
+await billing.cancelSubscription("sub_123");
+
+// Cancel immediately
+await billing.cancelSubscription("sub_123", true);
+```
+
+---
+
+## reactivateSubscription
+
+Reactivate a subscription that was cancelled but hasn't ended yet.
+
+```typescript
+await billing.reactivateSubscription("sub_123");
+```
+
+## Subscription object
+
+```typescript
+interface Subscription {
+  id: string
+  customer_id: string
+  price_id: string
+  status: "active" | "canceled" | "incomplete" | "past_due" | "trialing" | "unpaid"
+  current_period_start: string
+  current_period_end: string
+  cancel_at_period_end: boolean
+  trial_start?: string
+  trial_end?: string
+  canceled_at?: string
+  metadata?: Record<string, string>
+  created_at: string
+  updated_at: string
+}
+```

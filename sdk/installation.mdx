@@ -1,0 +1,71 @@
+---
+title: Installation
+description: Install the BillingOS SDK in your project.
+icon: download
+---
+
+## Install the packages
+
+<CodeGroup>
+```bash npm
+npm install @billingos/sdk @billingos/node
+```
+
+```bash pnpm
+pnpm add @billingos/sdk @billingos/node
+```
+
+```bash yarn
+yarn add @billingos/sdk @billingos/node
+```
+</CodeGroup>
+
+| Package | Where it runs | Purpose |
+|---------|--------------|---------|
+| `@billingos/sdk` | Browser (React) | UI components, hooks, client |
+| `@billingos/node` | Server (Node.js) | Session tokens, server-side operations |
+
+## Requirements
+
+- **React** 18.0 or later (React 19 supported)
+- **Node.js** 18.0 or later (for the server SDK)
+
+### Peer dependencies
+
+The React SDK requires these peer dependencies. Most React projects already have them:
+
+```json
+{
+  "@tanstack/react-query": "^5.90.0",
+  "react": "^18.0.0 || ^19.0.0",
+  "react-dom": "^18.0.0 || ^19.0.0"
+}
+```
+
+<Note>
+  If you use the `CheckoutModal` component, you'll also need Stripe's React library:
+  ```json
+  {
+    "@stripe/react-stripe-js": "^4.0.2",
+    "@stripe/stripe-js": "^7.1.0"
+  }
+  ```
+</Note>
+
+## Environment variables
+
+Add your BillingOS secret key to your server environment:
+
+```bash .env.local
+BILLINGOS_SECRET_KEY=sk_test_your_secret_key_here
+```
+
+<Warning>
+  Your secret key starts with `sk_test_` (development) or `sk_live_` (production). Never expose it in client-side code.
+</Warning>
+
+You can find your API keys in the [BillingOS Dashboard](https://app.billingos.com).
+
+## Next step
+
+Set up the [BillingOSProvider](/sdk/provider) to connect the SDK to your app.

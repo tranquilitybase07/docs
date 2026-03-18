@@ -1,0 +1,46 @@
+---
+title: Usage Metrics
+description: Get usage metrics for metered features.
+---
+
+## GET /v1/features/usage-metrics
+
+Returns usage metrics for the current billing period.
+
+### Authentication
+
+Requires a session token (`bos_session_...`).
+
+### Query parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `feature_key` | `string` | Filter to a specific feature (optional) |
+
+### Response
+
+```json
+{
+  "metrics": [
+    {
+      "feature_key": "api_calls",
+      "feature_title": "API Calls",
+      "product_name": "Pro Plan",
+      "consumed": 450,
+      "limit": 1000,
+      "remaining": 550,
+      "percentage_used": 45,
+      "period_start": "2025-01-01T00:00:00Z",
+      "period_end": "2025-02-01T00:00:00Z",
+      "resets_in_days": 15
+    }
+  ]
+}
+```
+
+### Example
+
+```bash
+curl "https://api.billingos.com/v1/features/usage-metrics?feature_key=api_calls" \
+  -H "Authorization: Bearer bos_session_abc123"
+```

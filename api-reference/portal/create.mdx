@@ -1,0 +1,37 @@
+---
+title: Create Portal Session
+description: Create a customer portal session for the iframe-based portal.
+---
+
+## POST /v1/portal/create
+
+Creates a new portal session for the `CustomerPortal` component.
+
+### Authentication
+
+Requires a session token (`bos_session_...`).
+
+### Request body
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `customerId` | `string` | Customer ID (optional — inferred from token) |
+| `metadata` | `object` | Custom key-value pairs |
+
+### Response
+
+```json
+{
+  "id": "portal_session_abc123",
+  "expiresAt": "2025-01-15T13:00:00Z"
+}
+```
+
+### Example
+
+```bash
+curl -X POST https://api.billingos.com/v1/portal/create \
+  -H "Authorization: Bearer bos_session_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```

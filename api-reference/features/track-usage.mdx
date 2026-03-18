@@ -1,0 +1,41 @@
+---
+title: Track Usage
+description: Record a usage event for a metered feature.
+---
+
+## POST /v1/features/track-usage
+
+Records a usage event. Used for metered/quota-based features.
+
+### Authentication
+
+Requires a session token (`bos_session_...`) or API key (`sk_...`).
+
+### Request body
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `feature_key` | `string` | Yes | Feature to track |
+| `quantity` | `number` | Yes | Units to record |
+| `timestamp` | `string` | No | ISO timestamp (defaults to now) |
+| `metadata` | `object` | No | Additional context |
+
+### Response
+
+```json
+{
+  "success": true
+}
+```
+
+### Example
+
+```bash
+curl -X POST https://api.billingos.com/v1/features/track-usage \
+  -H "Authorization: Bearer bos_session_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "feature_key": "api_calls",
+    "quantity": 1
+  }'
+```

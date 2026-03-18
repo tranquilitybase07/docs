@@ -1,0 +1,52 @@
+---
+title: Confirm Payment
+description: Confirm a checkout payment with a payment method.
+---
+
+## POST /v1/checkout/:clientSecret/confirm
+
+Confirms the payment for a checkout session using a Stripe payment method.
+
+### Authentication
+
+The `clientSecret` in the URL acts as authentication for this endpoint.
+
+### Path parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `clientSecret` | `string` | The client secret from the checkout session |
+
+### Request body
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `paymentMethodId` | `string` | Yes | Stripe payment method ID |
+
+### Response
+
+```json
+{
+  "success": true,
+  "subscription": {
+    "id": "sub_abc123",
+    "status": "active",
+    "price_id": "price_pro_monthly",
+    "current_period_end": "2025-02-15T00:00:00Z"
+  }
+}
+```
+
+### Example
+
+```bash
+curl -X POST https://api.billingos.com/v1/checkout/cs_secret_abc123/confirm \
+  -H "Content-Type: application/json" \
+  -d '{
+    "paymentMethodId": "pm_abc123"
+  }'
+```
+
+<Note>
+  This endpoint is typically called by the `CheckoutModal` component automatically. You only need to call it directly if building a custom checkout flow.
+</Note>

@@ -1,80 +1,199 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Accept your first payment in under 5 minutes.
+icon: rocket
 ---
 
-## Get started in three steps
+This guide walks you through adding BillingOS to your app. By the end, you'll have a working pricing page with checkout.
 
-Get your documentation site running locally and make your first customization.
+<Info>
+  **Prerequisites:** A BillingOS account with at least one product created in the dashboard.
+</Info>
 
-### Step 1: Set up your local environment
+## Step 1: Install the packages
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<CodeGroup>
+```bash npm
+npm install @billingos/sdk @billingos/node
+```
 
-### Step 2: Deploy your changes
+```bash pnpm
+pnpm add @billingos/sdk @billingos/node
+```
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+```bash yarn
+yarn add @billingos/sdk @billingos/node
+```
+</CodeGroup>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+`@billingos/sdk` — React components and hooks for your frontend.
+`@billingos/node` — Server SDK for creating session tokens.
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+## Step 2: Create a session token endpoint
 
-### Step 3: Go live
+BillingOS uses **session tokens** to securely identify your users. You create the token on your server (so your secret key stays private), and the SDK uses it automatically for all API calls.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+First, add your secret key to your environment:
 
-## Next steps
+```bash .env.local
+BILLINGOS_SECRET_KEY=sk_test_your_secret_key_here
+```
 
-Now that you have your docs running, explore these key features:
+Then create an endpoint that generates a token for the logged-in user:
 
-<CardGroup cols={2}>
+<CodeGroup>
+```typescript Next.js (App Router) [app/api/billingos-session/route.ts]
+import { BillingOS } from "@billingos/node";
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+export async function GET(request: Request) {
+  // Replace with your actual auth — NextAuth, Clerk, Supabase, etc.
+  const userId = await getLoggedInUserId(request);
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+  const { sessionToken, expiresAt } = await billing.createSessionToken({
+    externalUserId: userId, // your user's ID from your database
+    expiresIn: 3600,        // 1 hour
+  });
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+  return Response.json({ sessionToken, expiresAt });
+}
+```
 
-</CardGroup>
+```typescript Next.js (Pages Router) [pages/api/billingos-session.ts]
+import { BillingOS } from "@billingos/node";
+import type { NextApiRequest, NextApiResponse } from "next";
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Replace with your actual auth
+  const userId = await getLoggedInUserId(req);
+
+  const { sessionToken, expiresAt } = await billing.createSessionToken({
+    externalUserId: userId,
+    expiresIn: 3600,
+  });
+
+  res.json({ sessionToken, expiresAt });
+}
+```
+
+```typescript Node.js / Express [routes/billingos-session.ts]
+import express from "express";
+import { BillingOS } from "@billingos/node";
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+
+const router = express.Router();
+
+router.get("/api/billingos-session", async (req, res) => {
+  // Replace with your actual auth middleware
+  const userId = req.user.id;
+
+  const { sessionToken, expiresAt } = await billing.createSessionToken({
+    externalUserId: userId,
+    expiresIn: 3600,
+  });
+
+  res.json({ sessionToken, expiresAt });
+});
+```
+</CodeGroup>
+
+<Tip>
+  The `externalUserId` is your user's ID from your own database. BillingOS uses it to link the session to the right customer's subscriptions and entitlements.
+</Tip>
+
+## Step 3: Add the Provider to your app
+
+`BillingOSProvider` (from `@billingos/sdk`) wraps your app and handles fetching the session token automatically. Pass it the URL of the endpoint you just created.
+
+```tsx app/layout.tsx
+import { BillingOSProvider } from "@billingos/sdk";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        <BillingOSProvider sessionTokenUrl="/api/billingos-session">
+          {children}
+        </BillingOSProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+That's all the setup. The SDK now:
+- Fetches a session token from your endpoint when the app loads
+- Attaches the token to every API call
+- Refreshes the token automatically before it expires
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  Next.js App Router requires `"use client"` for components that use React context. If you hit this, wrap `BillingOSProvider` in a client component:
+  ```tsx app/providers.tsx
+  "use client";
+  import { BillingOSProvider } from "@billingos/sdk";
+  export function Providers({ children }: { children: React.ReactNode }) {
+    return (
+      <BillingOSProvider sessionTokenUrl="/api/billingos-session">
+        {children}
+      </BillingOSProvider>
+    );
+  }
+  ```
+  Then use `<Providers>` in your layout instead.
 </Note>
+
+## Step 4: Add a pricing page
+
+Drop in the `PricingTable` component. It fetches your products and renders a complete pricing page — no extra code needed.
+
+```tsx app/pricing/page.tsx
+import { PricingTable } from "@billingos/sdk";
+
+export default function PricingPage() {
+  return (
+    <div className="max-w-5xl mx-auto py-16 px-4">
+      <PricingTable useCheckoutModal={true} />
+    </div>
+  );
+}
+```
+
+## Step 5: Test it
+
+Start your dev server and visit `/pricing`:
+
+```bash
+npm run dev
+```
+
+You should see your products displayed as pricing cards. Click any plan to open the checkout modal.
+
+<Note>
+  **Test card number:** Use `4242 4242 4242 4242` with any future expiry date and any CVC.
+</Note>
+
+---
+
+## What's next?
+
+<CardGroup cols={3}>
+  <Card title="Show a Pricing Page" icon="tags" href="/guides/show-a-pricing-page">
+    Customize your pricing table with filters, themes, and custom actions.
+  </Card>
+  <Card title="Manage Subscriptions" icon="user-gear" href="/guides/manage-subscriptions">
+    Add a self-service customer portal.
+  </Card>
+  <Card title="Gate Features" icon="lock" href="/guides/gate-features">
+    Control access to features based on plan.
+  </Card>
+</CardGroup>

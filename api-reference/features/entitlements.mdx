@@ -1,0 +1,44 @@
+---
+title: List Entitlements
+description: List all feature entitlements for the current customer.
+---
+
+## GET /v1/features/entitlements
+
+Returns all feature entitlements granted by the customer's active subscriptions.
+
+### Authentication
+
+Requires a session token (`bos_session_...`).
+
+### Response
+
+```json
+{
+  "entitlements": [
+    {
+      "feature_key": "api_calls",
+      "feature_title": "API Calls",
+      "feature_type": "usage_quota",
+      "granted_at": "2025-01-01T00:00:00Z",
+      "product_name": "Pro Plan",
+      "subscription_status": "active"
+    },
+    {
+      "feature_key": "custom_branding",
+      "feature_title": "Custom Branding",
+      "feature_type": "boolean_flag",
+      "granted_at": "2025-01-01T00:00:00Z",
+      "product_name": "Pro Plan",
+      "subscription_status": "active"
+    }
+  ]
+}
+```
+
+### Example
+
+```bash
+curl https://api.billingos.com/v1/features/entitlements \
+  -H "Authorization: Bearer bos_session_abc123"
+```

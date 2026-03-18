@@ -1,0 +1,130 @@
+---
+title: CheckoutModal
+description: Secure, iframe-based checkout modal for processing payments.
+icon: credit-card
+---
+
+## Import
+
+```tsx
+import { CheckoutModal } from "@billingos/sdk";
+```
+
+## Basic usage
+
+```tsx
+const [open, setOpen] = useState(false);
+
+<CheckoutModal
+  open={open}
+  onOpenChange={setOpen}
+  priceId="price_pro_monthly"
+  onSuccess={(subscription) => {
+    console.log("Paid!", subscription);
+    setOpen(false);
+  }}
+/>
+```
+
+The checkout modal renders in a secure iframe. Card data never touches your servers — it goes directly to Stripe.
+
+## Props
+
+<ResponseField name="open" type="boolean" required>
+  Whether the modal is visible.
+</ResponseField>
+
+<ResponseField name="onOpenChange" type="(open: boolean) => void" required>
+  Called when the modal should open or close.
+</ResponseField>
+
+<ResponseField name="priceId" type="string" required>
+  The price ID to charge.
+</ResponseField>
+
+<ResponseField name="onSuccess" type="(subscription: any) => void" required>
+  Called after a successful payment.
+</ResponseField>
+
+<ResponseField name="customer" type="object">
+  Prefill customer information to skip the email step.
+  <Expandable>
+    <ResponseField name="email" type="string">Customer email</ResponseField>
+    <ResponseField name="name" type="string">Customer name</ResponseField>
+    <ResponseField name="taxId" type="string">Tax ID</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="couponCode" type="string">
+  Apply a discount code automatically.
+</ResponseField>
+
+<ResponseField name="collectBillingAddress" type="boolean">
+  Require billing address during checkout.
+</ResponseField>
+
+<ResponseField name="currency" type="string">
+  Override the default currency.
+</ResponseField>
+
+<ResponseField name="existingSubscriptionId" type="string">
+  Pass an existing subscription ID for upgrades/downgrades. The checkout will show proration details.
+</ResponseField>
+
+<ResponseField name="metadata" type="Record<string, string>">
+  Custom key-value pairs attached to the subscription.
+</ResponseField>
+
+<ResponseField name="theme" type="'light' | 'dark' | 'auto'" default="'light'">
+  Color theme for the checkout.
+</ResponseField>
+
+<ResponseField name="locale" type="string">
+  Locale for the checkout UI.
+</ResponseField>
+
+<ResponseField name="onError" type="(error: Error) => void">
+  Called if the payment fails.
+</ResponseField>
+
+<ResponseField name="onCancel" type="() => void">
+  Called if the user closes the modal without completing payment.
+</ResponseField>
+
+<ResponseField name="debug" type="boolean" default="false">
+  Enable debug logging for development.
+</ResponseField>
+
+## Examples
+
+### Upgrade with proration
+
+```tsx
+<CheckoutModal
+  open={open}
+  onOpenChange={setOpen}
+  priceId="price_enterprise_monthly"
+  existingSubscriptionId={currentSubscription.id}
+  onSuccess={(sub) => {
+    toast.success("Upgraded!");
+    queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+  }}
+/>
+```
+
+### With customer prefill and coupon
+
+```tsx
+<CheckoutModal
+  open={open}
+  onOpenChange={setOpen}
+  priceId="price_pro_yearly"
+  customer={{
+    email: user.email,
+    name: user.name,
+  }}
+  couponCode="LAUNCH20"
+  onSuccess={handleSuccess}
+  onError={(err) => toast.error(err.message)}
+/>
+```

@@ -1,0 +1,120 @@
+---
+title: Track Usage
+description: Track metered usage for quota-based billing and feature limits.
+icon: chart-bar
+---
+
+## When to track usage
+
+Track usage when your product has metered or quota-based features:
+- API calls per month
+- Storage used (GB)
+- Team members added
+- Emails sent
+- Files processed
+
+## Client-side tracking
+
+Use the `useTrackUsage` hook:
+
+```tsx
+import { useTrackUsage } from "@billingos/sdk";
+
+function UploadButton() {
+  const { mutateAsync: trackUsage } = useTrackUsage();
+
+  const handleUpload = async (file: File) => {
+    await uploadFile(file);
+
+    await trackUsage({
+      featureKey: "storage_gb",
+      quantity: file.size / (1024 * 1024 * 1024), // Convert to GB
+    });
+  };
+
+  return <button onClick={() => fileInput.click()}>Upload</button>;
+}
+```
+
+## Server-side tracking (recommended)
+
+Server-side tracking is more reliable — it can't be bypassed and handles retries automatically.
+
+```typescript
+import { BillingOS } from "@billingos/node";
+
+const billing = new BillingOS({ secretKey: process.env.BILLINGOS_SECRET_KEY! });
+
+// Track an API call
+await billing.trackUsage({
+  customerId: "cus_123",
+  featureKey: "api_calls",
+  quantity: 1,
+});
+
+// Track with idempotency key (prevents duplicates)
+await billing.trackUsage({
+  customerId: "cus_123",
+  featureKey: "api_calls",
+  quantity: 1,
+  idempotency_key: `request-${requestId}`,
+});
+```
+
+## Display usage to users
+
+### UsageDisplay component
+
+```tsx
+import { UsageDisplay } from "@billingos/sdk";
+
+// Show all metered features
+<UsageDisplay title="Your Usage" />
+
+// Show a specific feature
+<UsageDisplay featureKey="api_calls" />
+```
+
+### Custom usage UI with hooks
+
+```tsx
+import { useUsageMetrics } from "@billingos/sdk";
+
+function CustomUsageBar() {
+  const { data } = useUsageMetrics("api_calls");
+  const metric = data?.metrics?.[0];
+
+  if (!metric) return null;
+
+  const percentage = (metric.consumed / metric.limit) * 100;
+
+  return (
+    <div>
+      <p>{metric.feature_title}: {metric.consumed} / {metric.limit}</p>
+      <div className="bg-gray-200 rounded-full h-2">
+        <div
+          className="bg-green-500 rounded-full h-2"
+          style={{ width: `${Math.min(percentage, 100)}%` }}
+        />
+      </div>
+      <p className="text-sm text-gray-500">
+        Resets in {metric.resets_in_days} days
+      </p>
+    </div>
+  );
+}
+```
+
+## Detect approaching limits
+
+```tsx
+import { useIsApproachingLimit } from "@billingos/sdk";
+
+const isNearLimit = useIsApproachingLimit("cus_123", "api_calls", 80);
+
+if (isNearLimit) {
+  // Show upgrade nudge or warning
+}
+```
+
+The `UpgradeNudge` component can also handle this automatically — see [Upgrade Nudges](/guides/upgrade-nudges).

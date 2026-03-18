@@ -1,0 +1,105 @@
+---
+title: useFeature
+description: Check feature access and manage feature gating in your UI.
+icon: lock
+---
+
+## Hooks
+
+### useFeature
+
+Check if the current user has access to a specific feature.
+
+```tsx
+import { useFeature } from "@billingos/sdk";
+
+function ExportButton() {
+  const { data, isLoading } = useFeature("export_pdf");
+
+  if (isLoading) return <Spinner />;
+  if (!data?.has_access) return <UpgradePrompt feature="export_pdf" />;
+
+  return <button>Export PDF</button>;
+}
+```
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| `featureKey` | `string` | The feature key to check |
+| `options.refetchInterval` | `number` | Auto-refetch interval in ms |
+| `options.enabled` | `boolean` | Whether to run the query |
+
+**Returns:** `UseQueryResult<FeatureAccess>`
+
+```typescript
+interface FeatureAccess {
+  feature_key: string
+  has_access: boolean
+  limit?: number     // For usage_quota and numeric_limit features
+  usage?: number     // Current usage count
+  metadata?: Record<string, any>
+}
+```
+
+---
+
+### useFeatureGate
+
+A convenience hook that combines access checking with callbacks.
+
+```tsx
+import { useFeatureGate } from "@billingos/sdk";
+
+function ApiCallButton() {
+  const { hasAccess, isQuotaExceeded, usage, limit, remaining } = useFeatureGate(
+    "api_calls",
+    {
+      onAccessDenied: () => toast.error("Upgrade required"),
+      onQuotaExceeded: (usage, limit) =>
+        toast.warning(`${usage}/${limit} calls used`),
+    }
+  );
+
+  return (
+    <div>
+      <button disabled={!hasAccess}>Make API Call</button>
+      <span>{remaining} calls remaining</span>
+    </div>
+  );
+}
+```
+
+**Returns:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `hasAccess` | `boolean` | Whether the user can use this feature |
+| `isQuotaExceeded` | `boolean` | Whether usage exceeds the limit |
+| `usage` | `number` | Current usage |
+| `limit` | `number` | Plan limit |
+| `remaining` | `number` | Remaining usage |
+| ...plus all `UseQueryResult` properties |
+
+---
+
+### useFeatureEntitlements
+
+List all feature entitlements for the current user.
+
+```tsx
+const { data } = useFeatureEntitlements();
+
+// data.entitlements: FeatureEntitlement[]
+```
+
+```typescript
+interface FeatureEntitlement {
+  feature_key: string
+  feature_title: string
+  feature_type: "boolean_flag" | "usage_quota" | "numeric_limit"
+  granted_at: string
+  product_name: string
+  subscription_status: string
+}
+```

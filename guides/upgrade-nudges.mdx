@@ -1,0 +1,100 @@
+---
+title: Upgrade Nudges
+description: Automatically prompt users to upgrade when they approach plan limits.
+icon: arrow-up
+---
+
+## What are upgrade nudges?
+
+Upgrade nudges are automated prompts that appear when a user is approaching or has exceeded their plan limits. Instead of a hard wall, nudges encourage users to upgrade at the right moment.
+
+## How it works
+
+1. The SDK calls `checkUsage()` to see if the user is near a limit
+2. If usage exceeds the threshold (default: 80%), BillingOS returns a nudge trigger
+3. The `UpgradeNudge` component displays the prompt with a suggested plan
+
+## Automatic nudge
+
+```tsx
+import { UpgradeNudge } from "@billingos/sdk";
+import { useBillingOS } from "@billingos/sdk";
+import { useQuery } from "@tanstack/react-query";
+
+function NudgeBanner() {
+  const { client } = useBillingOS();
+
+  const { data } = useQuery({
+    queryKey: ["usage-check"],
+    queryFn: () => client.checkUsage(),
+    refetchInterval: 60000, // Check every minute
+  });
+
+  if (!data?.shouldShowNudge || !data.trigger) return null;
+
+  return (
+    <UpgradeNudge
+      trigger={data.trigger}
+      style="banner"
+      onUpgrade={(priceId) => {
+        // Open checkout for the suggested plan
+        router.push(`/pricing?plan=${priceId}`);
+      }}
+    />
+  );
+}
+```
+
+## Display styles
+
+| Style | Best for |
+|-------|----------|
+| `banner` | Top of page, non-intrusive, always visible |
+| `toast` | Bottom-right notification, auto-dismissible |
+| `modal` | Centered dialog, high visibility, requires action |
+
+```tsx
+// Banner at the top of a page
+<UpgradeNudge trigger={trigger} style="banner" />
+
+// Toast notification that auto-dismisses
+<UpgradeNudge trigger={trigger} style="toast" autoDismiss={10000} />
+
+// Modal for critical limits
+<UpgradeNudge trigger={trigger} style="modal" />
+```
+
+## Manual upgrade prompts
+
+For static placement (not triggered by usage), use `UpgradePrompt`:
+
+```tsx
+import { UpgradePrompt } from "@billingos/sdk";
+
+<UpgradePrompt
+  feature="advanced_analytics"
+  title="Unlock Advanced Analytics"
+  description="Get deeper insights with the Pro plan."
+  onUpgradeClick={() => router.push("/pricing")}
+/>
+```
+
+Or combine with `FeatureGate` for context-aware prompts:
+
+```tsx
+<FeatureGate
+  feature="custom_reports"
+  fallback={
+    <UpgradePrompt
+      feature="custom_reports"
+      title="Custom Reports"
+      description="Available on Pro and Enterprise plans."
+      onUpgradeClick={() => setCheckoutOpen(true)}
+    />
+  }
+>
+  <ReportBuilder />
+</FeatureGate>
+```
+
+See the [UpgradeNudge](/sdk/components/upgrade-nudge) and [UpgradePrompt](/sdk/components/upgrade-prompt) component references for all props.

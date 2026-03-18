@@ -1,0 +1,91 @@
+---
+title: useEntitlements
+description: Check entitlements, verify feature access, and monitor usage limits.
+icon: shield-check
+---
+
+## Hooks
+
+### useCheckEntitlement
+
+Check a single entitlement for a customer.
+
+```tsx
+import { useCheckEntitlement } from "@billingos/sdk";
+
+const { data } = useCheckEntitlement("cus_123", "custom_branding");
+// data.has_access: boolean
+// data.limit: number | undefined
+// data.usage: number | undefined
+```
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| `customerId` | `string` | Customer ID |
+| `featureKey` | `string` | Feature key to check |
+
+---
+
+### useHasFeature
+
+Boolean shorthand — returns `true` or `false`.
+
+```tsx
+import { useHasFeature } from "@billingos/sdk";
+
+const canExport = useHasFeature("cus_123", "export_pdf");
+
+if (canExport) {
+  // Show export button
+}
+```
+
+---
+
+### useEntitlements
+
+List all entitlements for a customer.
+
+```tsx
+import { useEntitlements } from "@billingos/sdk";
+
+const { data } = useEntitlements("cus_123");
+
+// data: Entitlement[]
+```
+
+---
+
+### useIsApproachingLimit
+
+Returns `true` when usage is within a threshold of the limit (default: 80%).
+
+```tsx
+import { useIsApproachingLimit } from "@billingos/sdk";
+
+const isNearLimit = useIsApproachingLimit("cus_123", "api_calls", 80);
+
+if (isNearLimit) {
+  // Show upgrade nudge
+}
+```
+
+**Parameters:**
+| Name | Type | Default | Description |
+|------|------|---------|-------------|
+| `customerId` | `string` | — | Customer ID |
+| `featureKey` | `string` | — | Feature key |
+| `threshold` | `number` | `80` | Percentage threshold |
+
+## Entitlement object
+
+```typescript
+interface Entitlement {
+  feature_key: string
+  has_access: boolean
+  limit?: number
+  usage?: number
+  metadata?: Record<string, string>
+}
+```

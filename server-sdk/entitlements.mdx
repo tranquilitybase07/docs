@@ -1,0 +1,72 @@
+---
+title: Entitlements
+description: Check feature access from your server for secure feature gating.
+icon: shield-check
+---
+
+## checkEntitlement
+
+Check if a customer has access to a specific feature. Use this in API routes to enforce feature gates server-side.
+
+```typescript
+const result = await billing.checkEntitlement("user_123", "api_calls");
+
+if (!result.has_access) {
+  return Response.json({ error: "Upgrade required" }, { status: 403 });
+}
+
+// For usage-based features, check the limit
+if (result.usage !== undefined && result.limit !== undefined) {
+  if (result.usage >= result.limit) {
+    return Response.json({ error: "Usage limit exceeded" }, { status: 429 });
+  }
+}
+```
+
+### Parameters
+
+| Name | Type | Description |
+|------|------|-------------|
+| `customerId` | `string` | Customer or external user ID |
+| `featureKey` | `string` | Feature key to check |
+
+### Response
+
+```typescript
+{
+  feature_key: "api_calls",
+  has_access: true,
+  limit: 1000,      // undefined for boolean features
+  usage: 450,       // undefined for boolean features
+  metadata: {}
+}
+```
+
+## Example: API middleware
+
+```typescript
+// middleware/entitlement.ts
+import { BillingOS } from "@billingos/node";
+
+const billing = new BillingOS({ secretKey: process.env.BILLINGOS_SECRET_KEY! });
+
+export async function checkFeatureAccess(userId: string, feature: string) {
+  const entitlement = await billing.checkEntitlement(userId, feature);
+
+  if (!entitlement.has_access) {
+    throw new Error(`Feature "${feature}" requires a plan upgrade`);
+  }
+
+  return entitlement;
+}
+```
+
+```typescript
+// In your API route
+const entitlement = await checkFeatureAccess(userId, "api_calls");
+// Proceed with the operation...
+```
+
+<Warning>
+  Always enforce entitlements server-side for security-critical features. Client-side `FeatureGate` components improve UX but can be bypassed by determined users.
+</Warning>

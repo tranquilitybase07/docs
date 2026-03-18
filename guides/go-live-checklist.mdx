@@ -1,0 +1,83 @@
+---
+title: Go Live Checklist
+description: Everything you need to check before accepting real payments.
+icon: rocket
+---
+
+## Before you go live
+
+Use this checklist to make sure everything is ready for production.
+
+### 1. Switch to live API keys
+
+Replace your test keys with live keys:
+
+```bash .env.local
+# Development
+BILLINGOS_SECRET_KEY=sk_test_...
+
+# Production
+BILLINGOS_SECRET_KEY=sk_live_...
+```
+
+<Warning>
+  Never commit API keys to version control. Use environment variables in your hosting provider (Vercel, Railway, etc.).
+</Warning>
+
+### 2. Test the full flow
+
+Run through the complete customer journey with test cards:
+
+- [ ] Visit pricing page — plans display correctly
+- [ ] Select a plan — checkout modal opens
+- [ ] Complete payment with test card `4242 4242 4242 4242`
+- [ ] Verify subscription is active
+- [ ] Check feature gates work (access granted on subscribed features)
+- [ ] Open customer portal — subscription details display
+- [ ] Change plan (upgrade/downgrade) — proration shows correctly
+- [ ] Cancel subscription — cancellation flow works
+- [ ] Reactivate subscription — plan restores
+
+### 3. Set up webhooks
+
+- [ ] Create a webhook endpoint in your app
+- [ ] Register the endpoint URL in your BillingOS dashboard
+- [ ] Handle key events: `subscription.created`, `payment.failed`, `subscription.cancelled`
+
+### 4. Verify Stripe Connect
+
+- [ ] Stripe Connect onboarding is complete
+- [ ] Stripe account is verified and active
+- [ ] Payout settings are configured
+
+### 5. Review security
+
+- [ ] Secret key is only used server-side (never in client code)
+- [ ] Session tokens are created with authenticated user IDs
+- [ ] Server-side entitlement checks are in place for critical features
+- [ ] HTTPS is enabled on your domain
+
+### 6. Error handling
+
+- [ ] Checkout failure shows a user-friendly error message
+- [ ] Payment decline shows the reason and next steps
+- [ ] Network errors are handled gracefully
+- [ ] `onError` callbacks are set on `CheckoutModal`
+
+### 7. Deploy
+
+- [ ] Environment variables set in production hosting
+- [ ] Webhook endpoint is accessible from the internet
+- [ ] Test one real payment with a small amount
+- [ ] Monitor logs for any errors
+
+<Info>
+  **Sandbox mode** is on the roadmap. Currently, use Stripe test mode keys (`sk_test_...`) for development and Stripe live keys (`sk_live_...`) for production.
+</Info>
+
+## You're live!
+
+Once everything checks out, your customers can start subscribing. Monitor your BillingOS dashboard for:
+- New subscriptions
+- Failed payments
+- Customer activity

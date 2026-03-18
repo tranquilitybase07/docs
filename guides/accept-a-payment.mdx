@@ -1,0 +1,138 @@
+---
+title: Accept a Payment
+description: Process your first payment using the checkout modal or the checkout API.
+icon: credit-card
+---
+
+## Two ways to accept payments
+
+| Approach | Best for | Effort |
+|----------|----------|--------|
+| **Checkout Modal** (recommended) | Most apps — drop-in, PCI-compliant, handles everything | 3 lines of code |
+| **Checkout API** | Custom flows where you need full control | More code, more flexibility |
+
+## Checkout Modal
+
+The `CheckoutModal` renders a secure iframe-based checkout. Card data never touches your servers.
+
+### With PricingTable (easiest)
+
+If you're using the `PricingTable` component, just set `useCheckoutModal={true}` — the modal opens automatically when a user selects a plan. See [Show a Pricing Page](/guides/show-a-pricing-page) for details.
+
+### Standalone checkout modal
+
+For custom UIs where you want to trigger checkout yourself:
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { CheckoutModal } from "@billingos/sdk";
+
+export default function UpgradeButton() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button onClick={() => setOpen(true)}>
+        Upgrade to Pro
+      </button>
+
+      <CheckoutModal
+        open={open}
+        onOpenChange={setOpen}
+        priceId="price_pro_monthly"
+        onSuccess={(subscription) => {
+          console.log("Payment successful!", subscription);
+          setOpen(false);
+        }}
+      />
+    </>
+  );
+}
+```
+
+### Checkout modal options
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `open` | `boolean` | Yes | Whether the modal is visible |
+| `onOpenChange` | `(open: boolean) => void` | Yes | Called when the modal should open/close |
+| `priceId` | `string` | Yes | The price to charge |
+| `onSuccess` | `(subscription: any) => void` | Yes | Called after successful payment |
+| `customer` | `{ email?, name?, taxId? }` | No | Prefill customer info |
+| `couponCode` | `string` | No | Apply a discount code |
+| `theme` | `"light" \| "dark" \| "auto"` | No | Color theme |
+| `onError` | `(error: Error) => void` | No | Called if payment fails |
+| `onCancel` | `() => void` | No | Called if user closes the modal |
+| `existingSubscriptionId` | `string` | No | For upgrades/downgrades |
+| `metadata` | `Record<string, string>` | No | Custom data attached to the subscription |
+| `debug` | `boolean` | No | Enable debug logging |
+
+### Prefill customer information
+
+Skip the email step by passing customer data:
+
+```tsx
+<CheckoutModal
+  open={open}
+  onOpenChange={setOpen}
+  priceId="price_pro_monthly"
+  customer={{
+    email: "user@example.com",
+    name: "Jane Smith",
+  }}
+  onSuccess={handleSuccess}
+/>
+```
+
+## Checkout API
+
+For fully custom checkout flows, use the `useCheckout` hook:
+
+```tsx
+"use client";
+
+import { useCheckout } from "@billingos/sdk";
+
+export default function CustomCheckout() {
+  const { openCheckout, isLoading, error } = useCheckout();
+
+  const handleUpgrade = async () => {
+    await openCheckout({
+      priceId: "price_pro_monthly",
+      customer: {
+        email: "user@example.com",
+      },
+    });
+  };
+
+  return (
+    <button onClick={handleUpgrade} disabled={isLoading}>
+      {isLoading ? "Processing..." : "Upgrade to Pro"}
+    </button>
+  );
+}
+```
+
+## Testing payments
+
+<Note>
+  Use these test card numbers in development:
+
+  | Card | Result |
+  |------|--------|
+  | `4242 4242 4242 4242` | Successful payment |
+  | `4000 0000 0000 3220` | 3D Secure authentication |
+  | `4000 0000 0000 0002` | Card declined |
+
+  Use any future expiry date and any 3-digit CVC.
+</Note>
+
+## What happens after payment
+
+1. BillingOS creates a Stripe subscription
+2. The `onSuccess` callback fires with the subscription object
+3. The customer's entitlements are immediately updated
+4. Feature gates (`useFeature`, `<FeatureGate>`) reflect the new plan
+5. The `PricingTable` shows "Current Plan" on the subscribed plan
