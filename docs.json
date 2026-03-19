@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "BillingOS",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#155dfc",
+    "light": "#155dfc",
+    "dark": "#155dfc"
   },
   "favicon": "/favicon.svg",
   "logo": {
@@ -16,13 +16,13 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:support@billingos.com"
+        "href": "mailto:hello@billingos.dev"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://app.billingos.com"
+      "href": "https://app.billingos.dev"
     }
   },
   "navigation": {
@@ -32,18 +32,11 @@
         "groups": [
           {
             "group": "Get Started",
-            "pages": [
-              "index",
-              "quickstart",
-              "guides/session-tokens"
-            ]
+            "pages": ["index", "quickstart", "guides/session-tokens"]
           },
           {
             "group": "Accept Payments",
-            "pages": [
-              "guides/show-a-pricing-page",
-              "guides/accept-a-payment"
-            ]
+            "pages": ["guides/show-a-pricing-page", "guides/accept-a-payment"]
           },
           {
             "group": "Manage Billing",
@@ -56,9 +49,7 @@
           },
           {
             "group": "Production",
-            "pages": [
-              "guides/go-live-checklist"
-            ]
+            "pages": ["guides/go-live-checklist"]
           }
         ]
       },
@@ -67,11 +58,7 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": [
-              "sdk/overview",
-              "sdk/installation",
-              "sdk/provider"
-            ]
+            "pages": ["sdk/overview", "sdk/installation", "sdk/provider"]
           },
           {
             "group": "Components",
@@ -98,9 +85,7 @@
           },
           {
             "group": "Advanced",
-            "pages": [
-              "sdk/client"
-            ]
+            "pages": ["sdk/client"]
           }
         ]
       },
@@ -125,24 +110,19 @@
       "anchors": [
         {
           "anchor": "GitHub",
-          "href": "https://github.com/billingos",
+          "href": "https://github.com/tranquilitybase07/billingos",
           "icon": "github"
         }
       ]
     }
   },
   "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "claude",
-      "cursor"
-    ]
+    "options": ["copy", "view", "claude", "cursor"]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/billingos",
-      "github": "https://github.com/billingos"
+      "x": "https://x.com/BillingOS",
+      "github": "https://github.com/tranquilitybase07/billingos"
     }
   }
 }
