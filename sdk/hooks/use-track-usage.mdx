@@ -1,0 +1,114 @@
+---
+title: useTrackUsage
+description: Track usage events and view usage metrics for metered features.
+icon: chart-line
+---
+
+## Hooks
+
+### useTrackUsage
+
+Track a usage event (e.g., an API call, a file upload, a team member added).
+
+```tsx
+import { useTrackUsage } from "@billingos/sdk";
+
+function ApiCallButton() {
+  const { mutateAsync: trackUsage } = useTrackUsage();
+
+  const handleApiCall = async () => {
+    const result = await makeApiCall();
+
+    await trackUsage({
+      featureKey: "api_calls",
+      quantity: 1,
+    });
+  };
+
+  return <button onClick={handleApiCall}>Make API Call</button>;
+}
+```
+
+**Input:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `featureKey` | `string` | Yes | Which feature was used |
+| `quantity` | `number` | Yes | How many units to track |
+| `metadata` | `Record<string, any>` | No | Additional context |
+
+---
+
+### useUsageMetrics
+
+Fetch usage metrics for the current user. Auto-refreshes every 30 seconds.
+
+```tsx
+import { useUsageMetrics } from "@billingos/sdk";
+
+function UsageDashboard() {
+  const { data } = useUsageMetrics("api_calls");
+
+  return (
+    <div>
+      {data?.metrics.map((metric) => (
+        <div key={metric.feature_key}>
+          <p>{metric.feature_title}</p>
+          <p>{metric.consumed} / {metric.limit} used</p>
+          <p>{metric.remaining} remaining</p>
+          <p>Resets in {metric.resets_in_days} days</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+**Parameters:**
+| Name | Type | Description |
+|------|------|-------------|
+| `featureKey` | `string` | Optional — filter to a specific feature |
+
+**Returns:** `UseQueryResult<{ metrics: UsageMetric[] }>`
+
+```typescript
+interface UsageMetric {
+  feature_key: string
+  feature_title: string
+  product_name: string
+  consumed: number
+  limit: number
+  remaining: number
+  percentage_used: number
+  period_start: string
+  period_end: string
+  resets_in_days: number
+}
+```
+
+---
+
+### useFeatureEntitlements
+
+Fetch all feature entitlements for the current user.
+
+```tsx
+import { useFeatureEntitlements } from "@billingos/sdk";
+
+const { data } = useFeatureEntitlements();
+// data.entitlements: FeatureEntitlement[]
+```
+
+## Example: Track with idempotency
+
+For scenarios where duplicate events could occur, include metadata for deduplication:
+
+```tsx
+await trackUsage({
+  featureKey: "api_calls",
+  quantity: 1,
+  metadata: {
+    idempotency_key: `api-call-${requestId}`,
+    endpoint: "/api/data",
+  },
+});
+```

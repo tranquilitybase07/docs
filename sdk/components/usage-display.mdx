@@ -1,0 +1,89 @@
+---
+title: UsageDisplay
+description: Show usage progress bars for metered features.
+icon: chart-bar
+---
+
+## Import
+
+```tsx
+import { UsageDisplay, CompactUsageDisplay } from "@billingos/sdk";
+```
+
+## Basic usage
+
+```tsx
+<UsageDisplay featureKey="api_calls" />
+```
+
+Renders a progress bar showing current usage vs the plan limit, with a reset timer.
+
+![Usage display](/images/usage-display.png)
+
+## Props
+
+<ResponseField name="featureKey" type="string">
+  Show usage for a specific feature. Omit to show all metered features.
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  Custom title above the usage display.
+</ResponseField>
+
+<ResponseField name="showProgress" type="boolean" default="true">
+  Show the progress bar.
+</ResponseField>
+
+<ResponseField name="showResetTimer" type="boolean" default="true">
+  Show when the usage counter resets.
+</ResponseField>
+
+<ResponseField name="className" type="string">
+  Custom CSS class name.
+</ResponseField>
+
+## CompactUsageDisplay
+
+A smaller variant for inline use (e.g., in headers or sidebars).
+
+```tsx
+<CompactUsageDisplay featureKey="api_calls" />
+```
+
+### Props
+
+<ResponseField name="featureKey" type="string" required>
+  The feature key to display usage for.
+</ResponseField>
+
+<ResponseField name="className" type="string">
+  Custom CSS class name.
+</ResponseField>
+
+## Examples
+
+### All features
+
+```tsx
+<UsageDisplay title="Your usage" />
+```
+
+### Single feature in a sidebar
+
+```tsx
+<aside>
+  <CompactUsageDisplay featureKey="api_calls" />
+  <CompactUsageDisplay featureKey="storage_gb" />
+</aside>
+```
+
+### Custom styled
+
+```tsx
+<UsageDisplay
+  featureKey="team_members"
+  title="Team members"
+  showResetTimer={false}
+  className="bg-gray-50 rounded-lg p-4"
+/>
+```

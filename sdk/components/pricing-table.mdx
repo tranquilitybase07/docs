@@ -1,0 +1,116 @@
+---
+title: PricingTable
+description: Display your products as a pricing page with built-in checkout.
+icon: tags
+---
+
+## Import
+
+```tsx
+import { PricingTable } from "@billingos/sdk";
+```
+
+## Basic usage
+
+```tsx
+<PricingTable />
+```
+
+Fetches all your products and renders a complete pricing page with:
+- Pricing cards with feature comparison
+- Monthly/yearly toggle
+- "Current Plan" badge for subscribed users
+- Upgrade/downgrade buttons
+- Built-in checkout modal (opens automatically on plan select)
+
+![PricingTable component](/images/pricing-table.png)
+
+## Props
+
+<ResponseField name="planIds" type="string[]">
+  Filter which products to display. Omit to show all active products.
+  ```tsx
+  <PricingTable planIds={["prod_starter", "prod_pro"]} />
+  ```
+</ResponseField>
+
+<ResponseField name="showIntervalToggle" type="boolean" default="true">
+  Show the monthly/yearly billing interval toggle.
+</ResponseField>
+
+<ResponseField name="defaultInterval" type="'month' | 'year'" default="'month'">
+  Which billing interval to show by default.
+</ResponseField>
+
+<ResponseField name="onSelectPlan" type="(priceId: string) => void">
+  Custom handler when a plan is selected. When set, the built-in checkout modal won't open — you handle the flow yourself.
+</ResponseField>
+
+<ResponseField name="onPlanChanged" type="(subscription: any) => void">
+  Called after a successful checkout or plan change.
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  Heading displayed above the pricing table.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Subheading displayed below the title.
+</ResponseField>
+
+<ResponseField name="customer" type="object">
+  Prefill customer information in checkout.
+  <Expandable>
+    <ResponseField name="email" type="string">Customer email</ResponseField>
+    <ResponseField name="name" type="string">Customer name</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="footerText" type="string | null">
+  Custom footer text below the pricing cards. Set to `null` to remove the footer entirely.
+</ResponseField>
+
+<ResponseField name="compact" type="boolean" default="false">
+  Compact layout for embedding in smaller spaces like sidebars.
+</ResponseField>
+
+## Examples
+
+### Filtered plans with yearly default
+
+```tsx
+<PricingTable
+  planIds={["prod_starter", "prod_pro", "prod_enterprise"]}
+  defaultInterval="year"
+  title="Simple, transparent pricing"
+  description="Start free, upgrade when you're ready."
+/>
+```
+
+### Custom plan selection
+
+```tsx
+<PricingTable
+  onSelectPlan={(priceId) => {
+    router.push(`/checkout?price=${priceId}`);
+  }}
+/>
+```
+
+### With customer prefill
+
+```tsx
+<PricingTable
+  customer={{ email: user.email, name: user.name }}
+  onPlanChanged={(sub) => {
+    toast.success("Subscribed!");
+    router.push("/dashboard");
+  }}
+/>
+```
+
+### Compact mode
+
+```tsx
+<PricingTable compact={true} footerText={null} />
+```

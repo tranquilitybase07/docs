@@ -1,0 +1,79 @@
+---
+title: Customers
+description: Create and manage customer records server-side.
+icon: users
+---
+
+## createCustomer
+
+```typescript
+const customer = await billing.createCustomer({
+  externalUserId: "user_123",
+  email: "jane@example.com",
+  name: "Jane Smith",
+  metadata: { company: "Acme Inc" },
+});
+```
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `externalUserId` | `string` | Yes | Your user's unique ID |
+| `externalOrganizationId` | `string` | No | Organization ID for B2B |
+| `email` | `string` | No | Customer email |
+| `name` | `string` | No | Customer name |
+| `metadata` | `Record<string, any>` | No | Custom key-value pairs |
+
+---
+
+## getCustomer
+
+```typescript
+const customer = await billing.getCustomer("cus_123");
+```
+
+---
+
+## getCustomerByExternalId
+
+Look up a customer by their ID in your system.
+
+```typescript
+const customer = await billing.getCustomerByExternalId("user_123");
+```
+
+---
+
+## updateCustomer
+
+```typescript
+const updated = await billing.updateCustomer("cus_123", {
+  name: "Jane Doe",
+  metadata: { company: "Acme Inc" },
+});
+```
+
+---
+
+## deleteCustomer
+
+```typescript
+await billing.deleteCustomer("cus_123");
+```
+
+## Customer object
+
+```typescript
+interface Customer {
+  id: string
+  externalUserId: string
+  externalOrganizationId?: string
+  email?: string
+  name?: string
+  stripeCustomerId?: string
+  metadata?: Record<string, any>
+  createdAt: Date
+  updatedAt: Date
+}
+```

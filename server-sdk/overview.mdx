@@ -1,0 +1,120 @@
+---
+title: Node SDK overview
+description: Server-side SDK for session tokens, entitlements, and usage tracking.
+icon: server
+---
+
+## What is the Node SDK?
+
+The `@billingos/node` package runs on your server. Use it to:
+
+- **Create session tokens** — authenticate your users with BillingOS
+- **Check entitlements** — verify feature access in API routes
+- **Track usage** — record metered usage from your backend
+- **Manage customers** — create and update customer records
+- **Manage subscriptions** — create, cancel, and modify subscriptions
+
+## Installation
+
+<CodeGroup>
+```bash npm
+npm install @billingos/node
+```
+
+```bash pnpm
+pnpm add @billingos/node
+```
+
+```bash yarn
+yarn add @billingos/node
+```
+</CodeGroup>
+
+## Initialize
+
+```typescript
+import { BillingOS } from "@billingos/node";
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+```
+
+### Configuration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `secretKey` | `string` | Required | Your BillingOS secret key |
+| `apiUrl` | `string` | Auto-detected | API base URL override |
+| `timeout` | `number` | `30000` | Request timeout in ms |
+| `maxRetries` | `number` | `3` | Max retry attempts for failed requests |
+
+### Auto-environment detection
+
+The SDK automatically detects your environment from the key prefix:
+
+| Key prefix | Environment | API URL |
+|------------|------------|---------|
+| `sk_test_*` | Sandbox | `https://sandbox-api.billingos.dev` |
+| `sk_live_*` | Production | `https://api.billingos.dev` |
+
+You can override this with the `apiUrl` option or the `BILLINGOS_API_URL` environment variable.
+
+## Quick examples
+
+### Create a session token
+
+```typescript
+const { sessionToken, expiresAt } = await billing.createSessionToken({
+  externalUserId: "user_123",
+  expiresIn: 3600,
+});
+```
+
+### Check a feature entitlement
+
+```typescript
+const result = await billing.checkEntitlement("user_123", "api_calls");
+
+if (result.has_access) {
+  // Allow the operation
+} else {
+  // Return 403
+}
+```
+
+### Track usage
+
+```typescript
+await billing.trackUsage({
+  customerId: "user_123",
+  featureKey: "api_calls",
+  quantity: 1,
+});
+```
+
+## Error handling
+
+```typescript
+import { BillingOS, ValidationError, NotFoundError } from "@billingos/node";
+
+try {
+  await billing.createSessionToken({ externalUserId: "" });
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error("Invalid input:", error.message);
+  } else if (error instanceof NotFoundError) {
+    console.error("Resource not found:", error.message);
+  }
+}
+```
+
+| Error class | Status | Description |
+|-------------|--------|-------------|
+| `ValidationError` | 400 | Input validation failed |
+| `AuthenticationError` | 401 | Invalid API key |
+| `AuthorizationError` | 403 | Insufficient permissions |
+| `NotFoundError` | 404 | Resource not found |
+| `RateLimitError` | 429 | Rate limit exceeded |
+| `ServerError` | 500+ | Server-side error |
+| `NetworkError` | — | Connection/timeout error |

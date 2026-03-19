@@ -1,88 +1,13 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "BillingOS",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#155dfc",
+    "light": "#155dfc",
+    "dark": "#155dfc"
   },
   "favicon": "/favicon.svg",
-  "navigation": {
-    "tabs": [
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API reference",
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
@@ -91,32 +16,113 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:hello@billingos.dev"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "href": "https://app.billingos.dev"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["index", "quickstart", "guides/session-tokens"]
+          },
+          {
+            "group": "Accept Payments",
+            "pages": ["guides/show-a-pricing-page", "guides/accept-a-payment"]
+          },
+          {
+            "group": "Manage Billing",
+            "pages": [
+              "guides/manage-subscriptions",
+              "guides/gate-features",
+              "guides/track-usage",
+              "guides/upgrade-nudges"
+            ]
+          },
+          {
+            "group": "Production",
+            "pages": ["guides/go-live-checklist"]
+          }
+        ]
+      },
+      {
+        "tab": "React SDK",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["sdk/overview", "sdk/installation", "sdk/provider"]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "sdk/components/pricing-table",
+              "sdk/components/checkout-modal",
+              "sdk/components/customer-portal",
+              "sdk/components/feature-gate",
+              "sdk/components/usage-display",
+              "sdk/components/upgrade-nudge",
+              "sdk/components/upgrade-prompt"
+            ]
+          },
+          {
+            "group": "Hooks",
+            "pages": [
+              "sdk/hooks/use-subscription",
+              "sdk/hooks/use-checkout",
+              "sdk/hooks/use-feature",
+              "sdk/hooks/use-entitlements",
+              "sdk/hooks/use-track-usage",
+              "sdk/hooks/use-products"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": ["sdk/client"]
+          }
+        ]
+      },
+      {
+        "tab": "Node SDK",
+        "groups": [
+          {
+            "group": "Server SDK",
+            "pages": [
+              "server-sdk/overview",
+              "server-sdk/session-tokens",
+              "server-sdk/customers",
+              "server-sdk/subscriptions",
+              "server-sdk/entitlements",
+              "server-sdk/usage"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/tranquilitybase07/billingos",
+          "icon": "github"
+        }
+      ]
     }
   },
   "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+    "options": ["copy", "view", "claude", "cursor"]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/BillingOS",
+      "github": "https://github.com/tranquilitybase07/billingos"
     }
   }
 }

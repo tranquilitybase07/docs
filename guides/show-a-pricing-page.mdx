@@ -1,0 +1,137 @@
+---
+title: Show a pricing page
+description: Display your plans with a single component. Customize layout, toggle monthly/yearly, and handle plan selection.
+icon: tags
+---
+
+A well-designed pricing page is the most important conversion touchpoint in your app. BillingOS gives you a production-ready pricing page with a single component — including checkout built in.
+
+## Basic pricing page
+
+The `PricingTable` component fetches your products and renders a complete pricing page. No configuration needed.
+
+```tsx
+import { PricingTable } from "@billingos/sdk";
+
+export default function PricingPage() {
+  return <PricingTable />;
+}
+```
+
+This gives you:
+- All your active products displayed as pricing cards
+- Feature comparison across plans
+- Monthly/yearly interval toggle
+- "Current Plan" badge for subscribed users
+- Upgrade/downgrade buttons
+- Built-in checkout modal when a plan is selected
+
+![PricingTable component](/images/pricing-table.png)
+
+## Customization
+
+### Show specific plans only
+
+Filter which products appear using `planIds`:
+
+```tsx
+<PricingTable planIds={["prod_starter", "prod_pro", "prod_enterprise"]} />
+```
+
+### Set the default billing interval
+
+```tsx
+<PricingTable
+  defaultInterval="year"
+  showIntervalToggle={true}
+/>
+```
+
+### Add a title and description
+
+```tsx
+<PricingTable
+  title="Simple, transparent pricing"
+  description="Start free, upgrade when you're ready."
+/>
+```
+
+### Compact mode
+
+For embedding in sidebars or smaller spaces:
+
+```tsx
+<PricingTable compact={true} />
+```
+
+### Custom footer text
+
+```tsx
+<PricingTable footerText="All plans include a 14-day free trial" />
+```
+
+Set to `null` to remove the default footer entirely:
+
+```tsx
+<PricingTable footerText={null} />
+```
+
+### Prefill customer info
+
+Skip the email step in checkout by passing customer data:
+
+```tsx
+<PricingTable
+  customer={{
+    email: "user@example.com",
+    name: "Jane Smith",
+  }}
+/>
+```
+
+## Handle plan selection
+
+### Built-in checkout (default)
+
+When a customer selects a plan, the checkout modal opens automatically. Handle success with `onPlanChanged`:
+
+```tsx
+<PricingTable
+  onPlanChanged={(subscription) => {
+    console.log("Subscribed!", subscription);
+    router.push("/dashboard");
+  }}
+/>
+```
+
+### Custom selection handler
+
+If you want full control over what happens when a plan is clicked:
+
+```tsx
+<PricingTable
+  onSelectPlan={(priceId) => {
+    console.log("Selected price:", priceId);
+    // Redirect, open a custom modal, etc.
+  }}
+/>
+```
+
+<Note>
+  When `onSelectPlan` is set, the built-in checkout modal won't open. You handle the flow yourself.
+</Note>
+
+## Props reference
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `planIds` | `string[]` | All products | Filter which products to show |
+| `showIntervalToggle` | `boolean` | `true` | Show monthly/yearly toggle |
+| `defaultInterval` | `"month" \| "year"` | `"month"` | Default billing interval |
+| `onSelectPlan` | `(priceId: string) => void` | — | Custom handler for plan selection |
+| `onPlanChanged` | `(subscription: any) => void` | — | Called after successful checkout |
+| `title` | `string` | — | Heading above the pricing table |
+| `description` | `string` | — | Subheading below the title |
+| `customer` | `{ email?, name? }` | — | Prefill customer info in checkout |
+| `footerText` | `string \| null` | — | Custom footer text (null to remove) |
+| `compact` | `boolean` | `false` | Compact layout for smaller spaces |

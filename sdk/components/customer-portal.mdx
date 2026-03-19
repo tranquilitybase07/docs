@@ -1,0 +1,129 @@
+---
+title: CustomerPortal
+description: Self-service portal for subscription management, invoices, and payment methods.
+icon: user-gear
+---
+
+## Import
+
+```tsx
+import { CustomerPortal } from "@billingos/sdk";
+```
+
+## Basic usage
+
+```tsx
+<CustomerPortal mode="page" />
+```
+
+Renders a complete self-service portal with four tabs:
+- **Subscription** — Current plan, features, upgrade/downgrade
+- **Invoices** — Payment history with PDF downloads
+- **Payment** — Add, remove, and set default payment methods
+- **Settings** — Update billing information
+
+![Customer portal](/images/customer-portal.png)
+
+## Props
+
+<ResponseField name="mode" type="'drawer' | 'modal' | 'page'" default="'drawer'">
+  Display mode:
+  - `drawer` — Slides in from the right
+  - `modal` — Centered overlay
+  - `page` — Full-page inline view
+</ResponseField>
+
+<ResponseField name="isOpen" type="boolean">
+  Controls visibility in `drawer` or `modal` mode.
+</ResponseField>
+
+<ResponseField name="onClose" type="() => void">
+  Called when the user closes the portal (drawer/modal mode).
+</ResponseField>
+
+<ResponseField name="defaultTab" type="'subscription' | 'invoices' | 'payment' | 'settings'" default="'subscription'">
+  Which tab to show first.
+</ResponseField>
+
+<ResponseField name="className" type="string">
+  Custom CSS class name.
+</ResponseField>
+
+<ResponseField name="customerId" type="string">
+  Load a specific customer's portal data.
+</ResponseField>
+
+<ResponseField name="metadata" type="Record<string, any>">
+  Custom metadata to pass to the portal session.
+</ResponseField>
+
+<ResponseField name="onSubscriptionUpdate" type="(subscription: any) => void">
+  Called when a subscription is upgraded or downgraded.
+</ResponseField>
+
+<ResponseField name="onSubscriptionCancel" type="() => void">
+  Called when a subscription is cancelled.
+</ResponseField>
+
+<ResponseField name="onPaymentMethodAdd" type="() => void">
+  Called when a new payment method is added.
+</ResponseField>
+
+<ResponseField name="onPaymentMethodUpdate" type="() => void">
+  Called when the default payment method changes.
+</ResponseField>
+
+<ResponseField name="debug" type="boolean" default="false">
+  Enable debug logging.
+</ResponseField>
+
+## Examples
+
+### Drawer mode (triggered by button)
+
+```tsx
+const [open, setOpen] = useState(false);
+
+<button onClick={() => setOpen(true)}>Manage Billing</button>
+
+<CustomerPortal
+  mode="drawer"
+  isOpen={open}
+  onClose={() => setOpen(false)}
+  onSubscriptionCancel={() => {
+    toast.info("Subscription cancelled");
+    setOpen(false);
+  }}
+/>
+```
+
+### Full page
+
+```tsx
+// app/billing/page.tsx
+export default function BillingPage() {
+  return (
+    <div className="max-w-4xl mx-auto py-8">
+      <h1>Billing</h1>
+      <CustomerPortal mode="page" defaultTab="subscription" />
+    </div>
+  );
+}
+```
+
+### Modal with callbacks
+
+```tsx
+<CustomerPortal
+  mode="modal"
+  isOpen={open}
+  onClose={() => setOpen(false)}
+  onSubscriptionUpdate={(sub) => {
+    toast.success("Plan updated!");
+    router.refresh();
+  }}
+  onPaymentMethodAdd={() => {
+    toast.success("Payment method added");
+  }}
+/>
+```

@@ -1,0 +1,73 @@
+---
+title: Go live checklist
+description: Everything you need to check before accepting real payments.
+icon: rocket
+---
+
+## Before you go live
+
+Use this checklist to make sure everything is ready for production.
+
+### 1. Switch to live API keys
+
+Replace your test keys with live keys in your production environment:
+
+```bash .env
+# Production
+BILLINGOS_SECRET_KEY=sk_live_...
+```
+
+<Warning>
+  Never commit API keys to version control. Use environment variables in your hosting provider (Vercel, Railway, etc.).
+</Warning>
+
+The SDK auto-detects the environment from your key prefix:
+- `sk_test_*` routes to the sandbox API
+- `sk_live_*` routes to the production API
+
+### 2. Test the full customer journey
+
+Run through the complete flow with test cards before switching to live:
+
+- [ ] Visit pricing page — plans display correctly
+- [ ] Select a plan — checkout modal opens
+- [ ] Complete payment with test card `4242 4242 4242 4242`
+- [ ] Verify subscription is active
+- [ ] Check feature gates work (access granted on subscribed features)
+- [ ] Open customer portal — subscription details display
+- [ ] Change plan (upgrade/downgrade) — proration shows correctly
+- [ ] Cancel subscription — cancellation flow works
+- [ ] Reactivate subscription — plan restores
+
+### 3. Verify Stripe Connect
+
+- [ ] Stripe Connect onboarding is complete in your BillingOS dashboard
+- [ ] Stripe account is verified and active
+- [ ] Payout settings are configured
+
+### 4. Review security
+
+- [ ] Secret key is only used server-side (never in client code)
+- [ ] Session tokens are created with authenticated user IDs
+- [ ] Server-side entitlement checks are in place for critical features
+- [ ] HTTPS is enabled on your domain
+
+### 5. Error handling
+
+- [ ] Checkout failure shows a user-friendly error message
+- [ ] Payment decline shows the reason and next steps
+- [ ] Network errors are handled gracefully
+- [ ] `onError` callbacks are set on `CheckoutModal`
+
+### 6. Deploy
+
+- [ ] Environment variables set in production hosting
+- [ ] Test one real payment with a small amount
+- [ ] Monitor logs for any errors
+
+## You're live!
+
+Once everything checks out, your customers can start subscribing. Monitor your BillingOS dashboard for:
+- New subscriptions
+- Failed payments
+- Customer activity

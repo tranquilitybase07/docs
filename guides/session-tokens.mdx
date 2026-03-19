@@ -1,0 +1,109 @@
+---
+title: Session tokens
+description: How BillingOS authenticates your customers without requiring a separate login.
+icon: key
+---
+
+Session tokens are the bridge between your auth system and BillingOS. They let your customers interact with billing components without ever creating a BillingOS account — the SDK handles everything behind the scenes.
+
+## What are session tokens?
+
+Session tokens are short-lived credentials that identify one of your customers to BillingOS. They're created by your server and used by the React SDK to make authenticated API calls.
+
+**Why tokens instead of API keys?** API keys give full access to your organization's data. Session tokens are scoped to a single customer and expire after a set time — making them safe to use in the browser.
+
+## How the flow works
+
+![Session token flow](/images/session-token-flow.png)
+
+<Steps>
+  <Step title="User visits a billing page">
+    Your React app needs to show pricing, checkout, or a customer portal.
+  </Step>
+  <Step title="SDK requests a token">
+    The `BillingOSProvider` calls your server endpoint (e.g., `/api/billingos-session`) to get a token.
+  </Step>
+  <Step title="Your server creates the token">
+    Using the Node SDK and your secret key, your server creates a session token tied to the user's ID.
+  </Step>
+  <Step title="SDK uses the token">
+    All subsequent API calls from the SDK include this token. No extra login for the user.
+  </Step>
+  <Step title="Token auto-refreshes">
+    The SDK automatically fetches a new token before the current one expires.
+  </Step>
+</Steps>
+
+## Creating session tokens
+
+### Server-side (Node SDK)
+
+<Snippet file="session-token-endpoint.mdx" />
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `externalUserId` | `string` | Yes | Your user's unique ID from your database |
+| `externalOrganizationId` | `string` | No | Organization ID for B2B scenarios |
+| `expiresIn` | `number` | No | Token lifetime in seconds (60–86400, default: 3600) |
+| `metadata` | `Record<string, any>` | No | Additional metadata (IP, user agent, etc.) |
+
+### Response
+
+```json
+{
+  "sessionToken": "bos_session_test_abc123...",
+  "expiresAt": "2025-01-15T12:00:00Z"
+}
+```
+
+## Token prefixes and auto-routing
+
+Session tokens are automatically prefixed based on your API key environment:
+
+| API key prefix | Token prefix | Routes to |
+|----------------|-------------|-----------|
+| `sk_test_*` | `bos_session_test_*` | Sandbox API |
+| `sk_live_*` | `bos_session_live_*` | Production API |
+
+The React SDK reads the token prefix and routes requests to the correct API automatically — no URL configuration needed.
+
+## Using tokens in the React SDK
+
+### Automatic mode (recommended)
+
+Pass a `sessionTokenUrl` and the SDK handles fetching and refreshing:
+
+```tsx
+<BillingOSProvider sessionTokenUrl="/api/billingos-session">
+  {children}
+</BillingOSProvider>
+```
+
+The SDK will:
+1. Call your endpoint when the provider mounts
+2. Store the token in memory
+3. Automatically refresh before expiry
+
+### Manual mode
+
+If you need more control, pass the token directly:
+
+```tsx
+<BillingOSProvider sessionToken={token}>
+  {children}
+</BillingOSProvider>
+```
+
+In manual mode, you're responsible for refreshing the token before it expires.
+
+## Security best practices
+
+<Warning>
+  **Never expose your secret key (`sk_test_...` or `sk_live_...`) in client-side code.** Session tokens should only be created on your server.
+</Warning>
+
+- **Always authenticate the user** before creating a session token. Don't create tokens for anonymous users.
+- **Use short expiry times.** The default 1-hour expiry is a good balance between security and UX.
+- **Pass your real user ID** as `externalUserId`. This ensures each customer only sees their own billing data.

@@ -1,0 +1,108 @@
+---
+title: UpgradePrompt
+description: Manual upgrade call-to-action component for placement anywhere in your app.
+icon: arrow-up
+---
+
+## Import
+
+```tsx
+import { UpgradePrompt, CompactUpgradePrompt } from "@billingos/sdk";
+```
+
+## Basic usage
+
+```tsx
+<UpgradePrompt
+  feature="advanced_analytics"
+  title="Unlock advanced analytics"
+  description="Get deeper insights into your data with the Pro plan."
+  onUpgradeClick={() => router.push("/pricing")}
+/>
+```
+
+Unlike `UpgradeNudge` (which triggers automatically), `UpgradePrompt` is placed manually wherever you want an upgrade CTA.
+
+## Props
+
+<ResponseField name="feature" type="string">
+  The feature that requires an upgrade.
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  Prompt title.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Prompt description.
+</ResponseField>
+
+<ResponseField name="isQuotaExceeded" type="boolean">
+  Whether this prompt is shown because a quota was exceeded.
+</ResponseField>
+
+<ResponseField name="usage" type="number">
+  Current usage count (shown when `isQuotaExceeded` is true).
+</ResponseField>
+
+<ResponseField name="limit" type="number">
+  Usage limit (shown when `isQuotaExceeded` is true).
+</ResponseField>
+
+<ResponseField name="onUpgradeClick" type="() => void">
+  Called when the upgrade button is clicked.
+</ResponseField>
+
+<ResponseField name="className" type="string">
+  Custom CSS class name.
+</ResponseField>
+
+## CompactUpgradePrompt
+
+A smaller inline variant for toolbars and sidebars.
+
+```tsx
+<CompactUpgradePrompt
+  feature="export_pdf"
+  onUpgradeClick={() => router.push("/pricing")}
+/>
+```
+
+### Props
+
+<ResponseField name="feature" type="string">Feature key.</ResponseField>
+<ResponseField name="onUpgradeClick" type="() => void">Upgrade button handler.</ResponseField>
+<ResponseField name="className" type="string">Custom CSS class.</ResponseField>
+
+## Examples
+
+### As a FeatureGate fallback
+
+```tsx
+<FeatureGate
+  feature="custom_reports"
+  fallback={
+    <UpgradePrompt
+      feature="custom_reports"
+      title="Custom reports"
+      description="Create custom reports with the Pro plan."
+      onUpgradeClick={() => router.push("/pricing")}
+    />
+  }
+>
+  <ReportBuilder />
+</FeatureGate>
+```
+
+### Quota exceeded prompt
+
+```tsx
+<UpgradePrompt
+  isQuotaExceeded={true}
+  usage={1000}
+  limit={1000}
+  title="API call limit reached"
+  description="Upgrade your plan to continue making API calls."
+  onUpgradeClick={() => setCheckoutOpen(true)}
+/>
+```

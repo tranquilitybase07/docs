@@ -1,0 +1,19 @@
+```typescript app/api/billingos-session/route.ts
+import { BillingOS } from "@billingos/node";
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+
+export async function GET(request: Request) {
+  // Replace this with your own authentication logic
+  const userId = await getAuthenticatedUserId(request);
+
+  const { sessionToken, expiresAt } = await billing.createSessionToken({
+    externalUserId: userId,
+    expiresIn: 3600, // 1 hour
+  });
+
+  return Response.json({ sessionToken, expiresAt });
+}
+```

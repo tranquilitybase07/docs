@@ -1,0 +1,72 @@
+---
+title: useProducts
+description: Fetch products and pricing data for custom pricing UIs.
+icon: box
+---
+
+## Import
+
+```tsx
+import { useProducts } from "@billingos/sdk";
+```
+
+## Usage
+
+```tsx
+function CustomPricingPage() {
+  const { data, isLoading } = useProducts();
+
+  if (isLoading) return <Spinner />;
+
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      {data?.products.map((product) => (
+        <div key={product.id} className="border rounded p-6">
+          <h3>{product.name}</h3>
+          <p>{product.description}</p>
+          {product.prices?.map((price) => (
+            <p key={price.id}>
+              ${(price.amount / 100).toFixed(2)}/{price.interval}
+            </p>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## Return type
+
+```typescript
+interface PricingProduct {
+  id: string
+  name: string
+  description: string
+  prices: PricingPrice[]
+  features: PricingFeature[]
+  isCurrentPlan: boolean
+  trialDays: number
+  highlighted?: boolean
+}
+
+interface PricingPrice {
+  id: string
+  amount: number        // In cents (e.g., 2900 = $29.00)
+  currency: string      // e.g., "usd"
+  interval: "month" | "year" | "week" | "day"
+  intervalCount: number
+}
+
+interface PricingFeature {
+  id: string
+  name: string
+  title: string
+  type: "boolean_flag" | "usage_quota" | "numeric_limit"
+  properties: Record<string, any>
+}
+```
+
+<Tip>
+  For most use cases, the [`<PricingTable />`](/sdk/components/pricing-table) component is easier than building a custom pricing UI. Use `useProducts` when you need full control over the layout.
+</Tip>

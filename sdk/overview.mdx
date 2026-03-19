@@ -1,0 +1,88 @@
+---
+title: React SDK overview
+description: Pre-built React components and hooks for billing, subscriptions, and payments.
+icon: react
+---
+
+## What's in the SDK
+
+The `@billingos/sdk` package gives you everything you need to add billing to a React app:
+
+| Category | What you get |
+|----------|-------------|
+| **Components** | Drop-in UI for pricing, checkout, portals, feature gates |
+| **Hooks** | TanStack Query-powered hooks for subscriptions, entitlements, usage |
+| **Client** | Low-level API client for custom integrations |
+| **Provider** | Context provider that manages auth and SDK state |
+
+## Components
+
+| Component | Purpose |
+|-----------|---------|
+| [`<PricingTable />`](/sdk/components/pricing-table) | Display plans with pricing, features, and built-in checkout |
+| [`<CheckoutModal />`](/sdk/components/checkout-modal) | Secure, iframe-based checkout modal |
+| [`<CustomerPortal />`](/sdk/components/customer-portal) | Self-service subscription, invoices, and payment management |
+| [`<FeatureGate />`](/sdk/components/feature-gate) | Show/hide content based on plan entitlements |
+| [`<UsageDisplay />`](/sdk/components/usage-display) | Progress bars showing feature usage vs limits |
+| [`<UpgradeNudge />`](/sdk/components/upgrade-nudge) | Automated upgrade prompts when users hit limits |
+| [`<UpgradePrompt />`](/sdk/components/upgrade-prompt) | Manual upgrade call-to-action |
+
+## Hooks
+
+| Hook | Purpose |
+|------|---------|
+| [`useSubscription`](/sdk/hooks/use-subscription) | Fetch and manage subscriptions |
+| [`useCheckout`](/sdk/hooks/use-checkout) | Programmatic checkout flow |
+| [`useFeature`](/sdk/hooks/use-feature) | Check feature access and track usage |
+| [`useEntitlements`](/sdk/hooks/use-entitlements) | List entitlements and check limits |
+| [`useTrackUsage`](/sdk/hooks/use-track-usage) | Track usage events and view metrics |
+| [`useProducts`](/sdk/hooks/use-products) | Fetch products and pricing |
+
+## What you don't need to do
+
+- **No Stripe SDK** — BillingOS handles all Stripe communication. No `@stripe/stripe-js` or `@stripe/react-stripe-js` needed.
+- **No PCI compliance** — Checkout runs in a secure iframe. Card data never touches your servers.
+- **No webhook handling** — Entitlements update automatically after checkout.
+
+## Quick example
+
+```tsx
+import { BillingOSProvider, PricingTable } from "@billingos/sdk";
+
+function App() {
+  return (
+    <BillingOSProvider sessionTokenUrl="/api/billingos-session">
+      <PricingTable />
+    </BillingOSProvider>
+  );
+}
+```
+
+That's a complete pricing page with checkout in 7 lines.
+
+## Architecture
+
+```
+BillingOSProvider (manages auth + SDK client)
+  └── Components (PricingTable, CheckoutModal, CustomerPortal, etc.)
+        └── Hooks (useSubscription, useFeature, useCheckout, etc.)
+              └── BillingOSClient (API layer)
+```
+
+## Requirements
+
+- React 18+ (React 19 supported)
+- TypeScript types included — no separate `@types` package needed
+- Built on [TanStack Query](https://tanstack.com/query) for data fetching and caching
+- Tree-shakeable bundle (`sideEffects: false`)
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/sdk/installation">
+    Install the SDK and set up peer dependencies.
+  </Card>
+  <Card title="BillingOSProvider" icon="plug" href="/sdk/provider">
+    Configure the provider and connect to your app.
+  </Card>
+</CardGroup>

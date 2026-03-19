@@ -1,0 +1,186 @@
+---
+title: Accept a payment
+description: Process your first payment using the checkout modal or the checkout API.
+icon: credit-card
+---
+
+A smooth checkout experience directly impacts your conversion rate. BillingOS gives you a PCI-compliant checkout modal that handles card collection, 3D Secure, and subscription creation — all without touching Stripe directly.
+
+## Two ways to accept payments
+
+| Approach | Best for | Effort |
+|----------|----------|--------|
+| **Checkout modal** (recommended) | Most apps — drop-in, PCI-compliant, handles everything | 3 lines of code |
+| **Checkout API** | Custom flows where you need full control | More code, more flexibility |
+
+## Checkout modal
+
+The `CheckoutModal` renders a secure iframe-based checkout. Card data never touches your servers.
+
+### With PricingTable (easiest)
+
+The `PricingTable` component opens the checkout modal automatically when a user selects a plan — no extra code needed:
+
+```tsx
+<PricingTable
+  onPlanChanged={(subscription) => {
+    console.log("Subscribed!", subscription);
+  }}
+/>
+```
+
+See [Show a pricing page](/guides/show-a-pricing-page) for full customization options.
+
+### Standalone checkout modal
+
+For custom UIs where you want to trigger checkout yourself:
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { CheckoutModal } from "@billingos/sdk";
+
+export default function UpgradeButton() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button onClick={() => setOpen(true)}>
+        Upgrade to Pro
+      </button>
+
+      <CheckoutModal
+        open={open}
+        onOpenChange={setOpen}
+        priceId="price_pro_monthly"
+        onSuccess={(subscription) => {
+          console.log("Payment successful!", subscription);
+          setOpen(false);
+        }}
+      />
+    </>
+  );
+}
+```
+
+![Checkout modal](/images/checkout-modal.png)
+
+### Prefill customer information
+
+Skip the email step by passing customer data:
+
+```tsx
+<CheckoutModal
+  open={open}
+  onOpenChange={setOpen}
+  priceId="price_pro_monthly"
+  customer={{
+    email: "user@example.com",
+    name: "Jane Smith",
+  }}
+  onSuccess={handleSuccess}
+/>
+```
+
+### Handle events
+
+```tsx
+<CheckoutModal
+  open={open}
+  onOpenChange={setOpen}
+  priceId="price_pro_monthly"
+  onSuccess={(subscription) => {
+    toast.success("Welcome to Pro!");
+    router.push("/dashboard");
+  }}
+  onError={(error) => {
+    toast.error(`Payment failed: ${error.message}`);
+  }}
+  onCancel={() => {
+    console.log("User closed checkout");
+  }}
+/>
+```
+
+### Adaptive pricing
+
+Enable localized pricing based on the customer's location:
+
+```tsx
+<CheckoutModal
+  open={open}
+  onOpenChange={setOpen}
+  priceId="price_pro_monthly"
+  adaptivePricing={true}
+  onSuccess={handleSuccess}
+/>
+```
+
+<Info>
+  The checkout modal runs in a secure iframe. Card details are handled entirely by Stripe — your app never processes or stores payment information. This means you're PCI-compliant by default.
+</Info>
+
+## Checkout API
+
+For fully custom checkout flows, use the `useCheckout` hook:
+
+```tsx
+"use client";
+
+import { useCheckout } from "@billingos/sdk";
+
+export default function CustomCheckout() {
+  const { openCheckout, isLoading, error } = useCheckout();
+
+  const handleUpgrade = async () => {
+    await openCheckout({
+      priceId: "price_pro_monthly",
+      customer: {
+        email: "user@example.com",
+      },
+    });
+  };
+
+  return (
+    <button onClick={handleUpgrade} disabled={isLoading}>
+      {isLoading ? "Processing..." : "Upgrade to Pro"}
+    </button>
+  );
+}
+```
+
+### Imperative API
+
+You can also open checkout programmatically from anywhere in your app:
+
+```typescript
+window.billingOS?.checkout.open({
+  priceId: "price_pro_monthly",
+  onSuccess: (subscription) => {
+    console.log("Subscribed!", subscription);
+  },
+});
+```
+
+## Testing payments
+
+<Note>
+  Use these test card numbers in development:
+
+  | Card | Result |
+  |------|--------|
+  | `4242 4242 4242 4242` | Successful payment |
+  | `4000 0000 0000 3220` | 3D Secure authentication |
+  | `4000 0000 0000 0002` | Card declined |
+
+  Use any future expiry date and any 3-digit CVC.
+</Note>
+
+## What happens after payment
+
+1. BillingOS creates a Stripe subscription
+2. The `onSuccess` callback fires with the subscription object
+3. The customer's entitlements are immediately updated
+4. Feature gates (`useFeature`, `<FeatureGate>`) reflect the new plan
+5. The `PricingTable` shows "Current Plan" on the subscribed plan

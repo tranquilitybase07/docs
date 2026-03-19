@@ -1,0 +1,150 @@
+---
+title: Manage subscriptions
+description: Add a self-service portal where customers manage their billing.
+icon: user-gear
+---
+
+Self-service billing reduces support tickets and increases customer satisfaction. BillingOS gives you a complete customer portal that handles plan changes, invoices, payment methods, and cancellations — all in a single component.
+
+## Drop-in customer portal
+
+The `CustomerPortal` component gives your users a complete billing management interface:
+
+```tsx
+import { CustomerPortal } from "@billingos/sdk";
+
+export default function BillingPage() {
+  return <CustomerPortal mode="page" />;
+}
+```
+
+![Customer portal](/images/customer-portal.png)
+
+That single line gives your customers:
+- Current plan details and renewal date
+- Upgrade and downgrade options with proration preview
+- Invoice history with PDF downloads
+- Add, remove, and change default payment methods
+- Cancel and reactivate subscriptions
+
+### Display modes
+
+The portal supports three modes for different UI patterns:
+
+```tsx
+// Full-page billing section
+<CustomerPortal mode="page" />
+
+// Slide-in drawer from the right
+<CustomerPortal mode="drawer" isOpen={open} onClose={() => setOpen(false)} />
+
+// Centered modal dialog
+<CustomerPortal mode="modal" isOpen={open} onClose={() => setOpen(false)} />
+```
+
+### Handle events
+
+```tsx
+<CustomerPortal
+  mode="page"
+  onSubscriptionUpdate={(subscription) => {
+    toast.success("Plan updated!");
+  }}
+  onSubscriptionCancel={() => {
+    toast.info("Subscription will cancel at end of period");
+  }}
+  onPaymentMethodAdd={() => {
+    toast.success("Payment method added");
+  }}
+/>
+```
+
+See the full [CustomerPortal reference](/sdk/components/customer-portal) for all props.
+
+## Using hooks for custom UIs
+
+If you need a custom billing interface, use the subscription hooks directly.
+
+### Show current subscription
+
+```tsx
+import { useSubscriptions } from "@billingos/sdk";
+
+function CurrentPlan() {
+  const { data } = useSubscriptions();
+  const subscription = data?.data?.[0];
+
+  if (!subscription) return <p>No active plan</p>;
+
+  return (
+    <div>
+      <p>Plan: {subscription.price_id}</p>
+      <p>Status: {subscription.status}</p>
+      <p>Renews: {new Date(subscription.current_period_end).toLocaleDateString()}</p>
+    </div>
+  );
+}
+```
+
+### Upgrade or downgrade
+
+```tsx
+import { useAvailablePlans, useChangePlan } from "@billingos/sdk";
+
+function PlanSwitcher({ subscriptionId }: { subscriptionId: string }) {
+  const { data: plans } = useAvailablePlans(subscriptionId);
+  const { mutateAsync: changePlan } = useChangePlan();
+
+  const handleChange = async (newPriceId: string) => {
+    await changePlan({
+      subscriptionId,
+      input: {
+        new_price_id: newPriceId,
+        effective_date: "immediate",
+      },
+    });
+  };
+
+  return (
+    <div>
+      <h3>Available upgrades</h3>
+      {plans?.available_upgrades.map((plan) => (
+        <button key={plan.price_id} onClick={() => handleChange(plan.price_id)}>
+          {plan.name} — ${plan.amount / 100}/mo
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+### Cancel subscription
+
+```tsx
+import { useCancelSubscription } from "@billingos/sdk";
+
+function CancelButton({ subscriptionId }: { subscriptionId: string }) {
+  const { mutateAsync: cancel, isPending } = useCancelSubscription(subscriptionId);
+
+  return (
+    <button
+      onClick={() => cancel({ immediately: false })}
+      disabled={isPending}
+    >
+      Cancel at end of billing period
+    </button>
+  );
+}
+```
+
+### Reactivate cancelled subscription
+
+```tsx
+import { useReactivateSubscription } from "@billingos/sdk";
+
+function ReactivateButton({ subscriptionId }: { subscriptionId: string }) {
+  const { mutateAsync: reactivate } = useReactivateSubscription(subscriptionId);
+
+  return <button onClick={() => reactivate()}>Keep my plan</button>;
+}
+```

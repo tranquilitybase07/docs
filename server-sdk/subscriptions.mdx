@@ -1,0 +1,78 @@
+---
+title: Subscriptions
+description: Create and manage subscriptions server-side.
+icon: repeat
+---
+
+## createSubscription
+
+```typescript
+const subscription = await billing.createSubscription({
+  customerId: "cus_123",
+  priceId: "price_pro_monthly",
+  metadata: { source: "api" },
+});
+```
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `customerId` | `string` | Yes | BillingOS customer ID |
+| `priceId` | `string` | Yes | Price ID to subscribe to |
+| `metadata` | `Record<string, any>` | No | Custom key-value pairs |
+
+---
+
+## getSubscription
+
+```typescript
+const subscription = await billing.getSubscription("sub_123");
+```
+
+---
+
+## updateSubscription
+
+```typescript
+const updated = await billing.updateSubscription("sub_123", {
+  priceId: "price_enterprise_monthly",
+  cancelAtPeriodEnd: false,
+});
+```
+
+---
+
+## cancelSubscription
+
+```typescript
+// Cancel at end of billing period (default)
+await billing.cancelSubscription("sub_123");
+```
+
+---
+
+## reactivateSubscription
+
+Reactivate a subscription that was cancelled but hasn't ended yet.
+
+```typescript
+await billing.reactivateSubscription("sub_123");
+```
+
+## Subscription object
+
+```typescript
+interface Subscription {
+  id: string
+  customerId: string
+  stripeSubscriptionId?: string
+  status: "active" | "past_due" | "canceled" | "incomplete" | "trialing"
+  currentPeriodStart?: Date
+  currentPeriodEnd?: Date
+  cancelAtPeriodEnd: boolean
+  metadata?: Record<string, any>
+  createdAt: Date
+  updatedAt: Date
+}
+```

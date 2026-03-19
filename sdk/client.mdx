@@ -1,0 +1,195 @@
+---
+title: BillingOSClient
+description: Low-level API client for advanced use cases and custom integrations.
+icon: terminal
+---
+
+## Overview
+
+The `BillingOSClient` class provides direct access to all BillingOS API methods. Use it when you need more control than hooks and components provide.
+
+<Note>
+  Most apps should use the [hooks](/sdk/hooks/use-subscription) and [components](/sdk/components/pricing-table) instead. The client is for advanced use cases like custom data fetching, server-side rendering, or non-React integrations.
+</Note>
+
+## Access the client
+
+From within a BillingOSProvider:
+
+```tsx
+import { useBillingOS } from "@billingos/sdk";
+
+function MyComponent() {
+  const { client } = useBillingOS();
+
+  // client is null until the session token loads
+  if (!client) return null;
+
+  const subscription = await client.getSubscription("sub_123");
+}
+```
+
+Or create a standalone client:
+
+```tsx
+import { BillingOSClient } from "@billingos/sdk";
+
+const client = new BillingOSClient("bos_session_test_xxx", {
+  baseUrl: "https://api.billingos.dev",
+});
+```
+
+## Constructor options
+
+```typescript
+interface BillingOSClientOptions {
+  baseUrl?: string                     // API base URL (auto-detected from token)
+  environment?: "production" | "sandbox"
+  version?: string                     // API version
+  headers?: Record<string, string>     // Custom headers
+  timeout?: number                     // Request timeout (ms)
+}
+```
+
+## Methods
+
+### Customers
+
+| Method | Description |
+|--------|-------------|
+| `createCustomer(input)` | Create a new customer |
+| `getCustomer(id)` | Get a customer by ID |
+| `listCustomers(params?)` | List customers (paginated) |
+| `updateCustomer(id, input)` | Update customer details |
+| `deleteCustomer(id)` | Delete a customer |
+
+### Subscriptions
+
+| Method | Description |
+|--------|-------------|
+| `createSubscription(input)` | Create a subscription |
+| `getSubscription(id)` | Get a subscription |
+| `listSubscriptions(params?)` | List subscriptions (paginated) |
+| `updateSubscription(id, input)` | Update a subscription |
+| `cancelSubscription(id, immediately?)` | Cancel a subscription |
+| `reactivateSubscription(id)` | Reactivate a cancelled subscription |
+| `previewSubscription(id, input)` | Preview subscription update proration |
+| `getAvailablePlans(subscriptionId)` | Get upgrade/downgrade options |
+| `previewPlanChange(subId, input)` | Preview plan change cost |
+| `changePlan(subId, input)` | Execute a plan change |
+
+### Entitlements and features
+
+| Method | Description |
+|--------|-------------|
+| `checkEntitlement(input)` | Check if a customer has access to a feature |
+| `listEntitlements(customerId?)` | List all entitlements |
+
+### Usage tracking
+
+| Method | Description |
+|--------|-------------|
+| `trackUsage(event)` | Track a usage event |
+| `getUsageMetrics(customerId?, featureKey?)` | Get usage metrics |
+
+### Invoices
+
+| Method | Description |
+|--------|-------------|
+| `getInvoice(id)` | Get an invoice |
+| `listInvoices(params?)` | List invoices (paginated) |
+
+### Payment methods
+
+| Method | Description |
+|--------|-------------|
+| `listPaymentMethods(customerId)` | List payment methods |
+| `removePaymentMethod(id)` | Remove a payment method |
+| `setDefaultPaymentMethod(id)` | Set the default payment method |
+
+### Checkout
+
+| Method | Description |
+|--------|-------------|
+| `createCheckout(input)` | Create a checkout session |
+| `confirmCheckout(clientSecret, paymentMethodId)` | Confirm a payment |
+
+### Checkout modal (iframe)
+
+Access via `client.checkout.*`:
+
+| Method | Description |
+|--------|-------------|
+| `checkout.createSession(input)` | Create a checkout session for the modal |
+| `checkout.getSession(sessionId)` | Get session details |
+| `checkout.confirmPayment(secret, pmId)` | Confirm payment |
+
+### Portal (iframe)
+
+Access via `client.portal.*`:
+
+| Method | Description |
+|--------|-------------|
+| `portal.createSession(input?)` | Create a portal session |
+| `portal.getSessionStatus(sessionId)` | Check session validity |
+| `portal.getPortalData(sessionId)` | Get aggregated portal data |
+
+### Pricing
+
+| Method | Description |
+|--------|-------------|
+| `getProducts(planIds?)` | Fetch products for pricing table |
+
+### Upgrade nudge
+
+| Method | Description |
+|--------|-------------|
+| `checkUsage()` | Check if an upgrade nudge should be shown |
+
+## Error classes
+
+The client throws typed errors you can catch:
+
+```typescript
+import {
+  BillingOSError,
+  UnauthorizedError,
+  NotFoundError,
+  ValidationError,
+  RateLimitError,
+  ServerError,
+  NetworkError,
+} from "@billingos/sdk";
+
+try {
+  await client.getSubscription("sub_invalid");
+} catch (error) {
+  if (error instanceof NotFoundError) {
+    console.log("Subscription not found");
+  } else if (error instanceof UnauthorizedError) {
+    console.log("Session token expired");
+  }
+}
+```
+
+## Imperative checkout API
+
+Open checkout from anywhere in your app — even outside React components:
+
+```typescript
+// Via the global window object
+window.billingOS?.checkout.open({
+  priceId: "price_pro_monthly",
+  onSuccess: (subscription) => console.log("Subscribed!", subscription),
+  onError: (error) => console.error("Failed:", error),
+  onCancel: () => console.log("Cancelled"),
+});
+
+// Or using the exported function
+import { openCheckout } from "@billingos/sdk";
+
+const result = await openCheckout({
+  priceId: "price_pro_monthly",
+  sessionToken: "bos_session_test_...",
+});
+```

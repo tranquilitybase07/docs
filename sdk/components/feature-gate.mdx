@@ -1,0 +1,99 @@
+---
+title: FeatureGate
+description: Show or hide content based on a user's plan entitlements.
+icon: lock
+---
+
+## Import
+
+```tsx
+import { FeatureGate } from "@billingos/sdk";
+```
+
+## Basic usage
+
+```tsx
+<FeatureGate feature="export_pdf">
+  <ExportButton />
+</FeatureGate>
+```
+
+Renders children only if the current user has access to the specified feature. Shows nothing by default when access is denied.
+
+![Feature gate](/images/feature-gate.png)
+
+## Props
+
+<ResponseField name="feature" type="string" required>
+  The feature key to check access for. Must match a feature key in your BillingOS dashboard.
+</ResponseField>
+
+<ResponseField name="children" type="ReactNode" required>
+  Content to render when the user has access.
+</ResponseField>
+
+<ResponseField name="fallback" type="ReactNode">
+  Content to render when access is denied. If omitted, nothing is rendered.
+</ResponseField>
+
+<ResponseField name="loading" type="ReactNode">
+  Content to render while the entitlement check is loading.
+</ResponseField>
+
+<ResponseField name="onAccessDenied" type="() => void">
+  Called when the user doesn't have access to the feature.
+</ResponseField>
+
+<ResponseField name="onQuotaExceeded" type="(usage: number, limit: number) => void">
+  Called when the user has exceeded their usage quota.
+</ResponseField>
+
+<ResponseField name="showUsageBadge" type="boolean">
+  Show remaining usage count as a badge.
+</ResponseField>
+
+## Examples
+
+### With upgrade prompt fallback
+
+```tsx
+<FeatureGate
+  feature="custom_branding"
+  fallback={
+    <div className="p-4 border rounded">
+      <p>Custom branding is available on the Pro plan.</p>
+      <button onClick={() => router.push("/pricing")}>
+        Upgrade
+      </button>
+    </div>
+  }
+>
+  <BrandingEditor />
+</FeatureGate>
+```
+
+### With usage badge
+
+```tsx
+<FeatureGate
+  feature="api_calls"
+  showUsageBadge={true}
+  onQuotaExceeded={(usage, limit) => {
+    toast.warning(`You've used ${usage}/${limit} API calls`);
+  }}
+>
+  <ApiCallButton />
+</FeatureGate>
+```
+
+### With loading state
+
+```tsx
+<FeatureGate
+  feature="advanced_analytics"
+  loading={<Skeleton className="h-64" />}
+  fallback={<UpgradePrompt feature="advanced_analytics" />}
+>
+  <AnalyticsDashboard />
+</FeatureGate>
+```
