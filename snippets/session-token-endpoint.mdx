@@ -7,10 +7,11 @@ const billing = new BillingOS({
 
 export async function GET(request: Request) {
   // Replace this with your own authentication logic
-  const userId = await getAuthenticatedUserId(request);
+  const user = await getAuthenticatedUser(request);
 
   const { sessionToken, expiresAt } = await billing.createSessionToken({
-    externalUserId: userId,
+    externalUserId: user.id,
+    email: user.email, // recommended — lazy-binds imported Stripe customers
     expiresIn: 3600, // 1 hour
   });
 

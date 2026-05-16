@@ -62,6 +62,61 @@ const updated = await billing.updateCustomer("cus_123", {
 await billing.deleteCustomer("cus_123");
 ```
 
+---
+
+## listUnresolvedCustomers
+
+List customers imported from Stripe that don't yet have an `external_id` bound to your user ID. Pair with `bindCustomer()` to resolve them. See [Migrating from Stripe](/guides/stripe-migration) for context.
+
+```typescript
+const { customers } = await billing.listUnresolvedCustomers();
+
+for (const c of customers) {
+  if (!c.email) continue;
+  const user = await db.users.findByEmail(c.email);
+  if (user) {
+    await billing.bindCustomer(c.id, user.id);
+  }
+}
+```
+
+### Response
+
+```typescript
+{
+  customers: Array<{
+    id: string
+    stripe_customer_id: string | null
+    email: string | null
+    name: string | null
+    created_at: string
+  }>
+}
+```
+
+---
+
+## bindCustomer
+
+Bind an imported customer to your internal user ID. The customer must currently have no `external_id` set; binding is one-way and immutable.
+
+```typescript
+await billing.bindCustomer(unresolved.id, user.id);
+```
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `customerId` | `string` | Yes | BillingOS customer ID (from `listUnresolvedCustomers`) |
+| `externalId` | `string` | Yes | Your user's ID from your database |
+
+<Warning>
+  External IDs are immutable once set. There's no `unbind` operation — double-check before binding.
+</Warning>
+
+---
+
 ## Customer object
 
 ```typescript

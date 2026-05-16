@@ -1,0 +1,121 @@
+---
+title: Connect Stripe
+description: How payment accounts work in BillingOS — sandbox setup and connecting your live Stripe account.
+icon: stripe
+---
+
+BillingOS uses [Stripe Connect](https://stripe.com/connect) to process payments. The setup is different in sandbox versus production — and the difference matters for how you build, test, and go live.
+
+## The two-environment model
+
+<CardGroup cols={2}>
+  <Card title="Sandbox" icon="flask">
+    BillingOS creates a managed test Stripe account for you instantly. No onboarding, no forms — start building immediately.
+  </Card>
+  <Card title="Production" icon="rocket">
+    You connect your own Stripe account via OAuth. You retain full control, and your customers stay yours.
+  </Card>
+</CardGroup>
+
+This split is intentional. Sandbox optimizes for speed of iteration. Production optimizes for clean ownership of your billing relationship.
+
+## Sandbox: managed accounts
+
+When you create a sandbox organization, BillingOS provisions a Stripe test account for you in the background. The account is auto-verified using Stripe's standard test values, so it's active the moment your org exists.
+
+**What you can do immediately:**
+- Create products and prices
+- Run test checkouts with [Stripe test cards](https://docs.stripe.com/testing#cards)
+- Build out feature gates, usage tracking, and customer portals
+- Trigger webhooks and verify your integration end-to-end
+
+**What you don't need to worry about:**
+- Filling out merchant onboarding forms
+- Bank account verification
+- Identity verification (KYC)
+- Payout setup
+
+<Note>
+  The managed sandbox account is for **testing only**. It cannot accept real payments and does not move real money. Use Stripe test card `4242 4242 4242 4242` for end-to-end testing.
+</Note>
+
+## Production: connect via OAuth
+
+When you're ready to go live, you connect your own Stripe account through OAuth.
+
+**Why OAuth in production:**
+- You own your Stripe account directly — no platform middleman
+- You get the full Stripe Dashboard for managing payments, refunds, and disputes
+- Your customer payment history, payout schedule, and bank details all stay with you
+- If you ever stop using BillingOS, your Stripe account and data remain intact
+
+**How to connect:**
+
+<Steps>
+  <Step title="Create your Stripe account">
+    If you don't already have one, sign up at [stripe.com](https://stripe.com). Complete Stripe's onboarding (business details, identity, bank account) — this only happens once.
+  </Step>
+  <Step title="Open the BillingOS dashboard in production mode">
+    Switch to the **Production** environment from the environment switcher in the sidebar.
+  </Step>
+  <Step title="Go to Settings → Billing">
+    You'll see a "Connect Your Stripe Account" card.
+  </Step>
+  <Step title="Click Continue to Stripe">
+    You'll be redirected to Stripe to authorize BillingOS. After approval, Stripe redirects you back and the connection is live.
+  </Step>
+  <Step title="Recreate your products in production">
+    Sandbox and production are isolated — products you created in sandbox don't carry over. Recreate them in production using the same dashboard you used in sandbox.
+  </Step>
+</Steps>
+
+<Tip>
+  Already have customers and subscriptions in your live Stripe account? They stay where they are — BillingOS uses Stripe as the source of truth and your customers keep paying through the same subscriptions. You can also [import them into BillingOS](/guides/stripe-migration) in a few clicks so portal, checkout, and feature gates work for them from day one.
+</Tip>
+
+## What stays the same across environments
+
+The integration code you write doesn't change between sandbox and production. The same SDK calls, components, and webhook payloads work identically against both. Only your secret key changes:
+
+```bash .env
+# Sandbox
+BILLINGOS_SECRET_KEY=sk_test_...
+
+# Production
+BILLINGOS_SECRET_KEY=sk_live_...
+```
+
+The SDK auto-routes based on the key prefix — `sk_test_*` hits the sandbox API, `sk_live_*` hits production. No conditional code in your app.
+
+## What changes when you go live
+
+| | Sandbox | Production |
+|---|---|---|
+| Stripe account | Managed by BillingOS | Yours, connected via OAuth |
+| Onboarding | Skipped | Complete on Stripe (one-time) |
+| Stripe Dashboard | Limited test view | Full dashboard at dashboard.stripe.com |
+| Refunds & disputes | Test only | Handled in your Stripe Dashboard |
+| Payouts | Disabled | Real payouts to your bank account |
+| Test cards | Required | Real cards |
+
+## Disconnecting
+
+You can disconnect your Stripe account from BillingOS at any time:
+
+- **Sandbox** — Disconnect from Settings → Billing. The managed account is deleted.
+- **Production** — Disconnect from Settings → Billing. OAuth authorization is revoked, but **all your Stripe data stays in your Stripe account**. Your products, customers, subscriptions, and payment history remain intact and accessible at dashboard.stripe.com.
+
+<Warning>
+  You cannot disconnect while you have active subscriptions on the account. Cancel or migrate them first to avoid breaking your customers' billing.
+</Warning>
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card title="Go-live checklist" icon="list-check" href="/guides/go-live-checklist">
+    Step-by-step checklist before flipping to live mode.
+  </Card>
+  <Card title="Show a pricing page" icon="tags" href="/guides/show-a-pricing-page">
+    Once Stripe is connected, drop in a pricing table.
+  </Card>
+</CardGroup>

@@ -32,7 +32,12 @@
         "groups": [
           {
             "group": "Get Started",
-            "pages": ["index", "quickstart", "guides/session-tokens"]
+            "pages": [
+              "index",
+              "quickstart",
+              "guides/session-tokens",
+              "guides/connect-stripe"
+            ]
           },
           {
             "group": "Accept Payments",
@@ -46,6 +51,10 @@
               "guides/track-usage",
               "guides/upgrade-nudges"
             ]
+          },
+          {
+            "group": "Migrate",
+            "pages": ["guides/stripe-migration"]
           },
           {
             "group": "Production",

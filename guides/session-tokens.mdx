@@ -45,6 +45,7 @@ Session tokens are short-lived credentials that identify one of your customers t
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `externalUserId` | `string` | Yes | Your user's unique ID from your database |
+| `email` | `string` | No, but recommended | Your user's email. Lets BillingOS lazy-bind imported Stripe customers to your user IDs on first session. See [Migrating from Stripe](/guides/stripe-migration). |
 | `externalOrganizationId` | `string` | No | Organization ID for B2B scenarios |
 | `expiresIn` | `number` | No | Token lifetime in seconds (60–86400, default: 3600) |
 | `metadata` | `Record<string, any>` | No | Additional metadata (IP, user agent, etc.) |

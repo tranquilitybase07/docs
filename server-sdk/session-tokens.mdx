@@ -11,6 +11,7 @@ Create a session token to authenticate a customer with the React SDK.
 ```typescript
 const { sessionToken, expiresAt } = await billing.createSessionToken({
   externalUserId: "user_123",
+  email: "user@example.com", // recommended
   expiresIn: 3600,
 });
 ```
@@ -20,6 +21,7 @@ const { sessionToken, expiresAt } = await billing.createSessionToken({
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `externalUserId` | `string` | Yes | Your user's unique ID from your database |
+| `email` | `string` | No, but recommended | Your user's email. Lets BillingOS lazy-bind imported Stripe customers on first session. See [Migrating from Stripe](/guides/stripe-migration). |
 | `externalOrganizationId` | `string` | No | Organization ID for B2B scenarios |
 | `expiresIn` | `number` | No | Token lifetime in seconds (60–86400, default: 3600) |
 | `allowedOperations` | `string[]` | No | Scope the token to specific operations |
@@ -30,9 +32,12 @@ const { sessionToken, expiresAt } = await billing.createSessionToken({
 ```typescript
 {
   sessionToken: "bos_session_test_abc123...",
-  expiresAt: Date  // Token expiration timestamp
+  expiresAt: Date,        // Token expiration timestamp
+  unresolvedCustomers?: number  // Count of imported customers still awaiting bind
 }
 ```
+
+The `unresolvedCustomers` field is populated when you have imported customers from Stripe that haven't been bound yet. The SDK uses it to surface a one-time `console.warn` if you're issuing tokens without `email`.
 
 ## revokeSessionToken
 
@@ -72,6 +77,7 @@ export async function GET() {
 
   const { sessionToken, expiresAt } = await billing.createSessionToken({
     externalUserId: session.user.id,
+    email: session.user.email, // recommended
     expiresIn: 3600,
   });
 

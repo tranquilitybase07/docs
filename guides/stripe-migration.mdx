@@ -1,0 +1,161 @@
+---
+title: Migrating from Stripe
+description: Import existing Stripe customers, products, and subscriptions into BillingOS so portal, checkout, and feature gates work for them on day one.
+icon: arrow-right-arrow-left
+---
+
+If you already have customers paying you through Stripe, you don't need to migrate them off Stripe to use BillingOS. BillingOS treats Stripe as the source of truth — your existing subscriptions keep running. The import flow simply mirrors them into BillingOS so the SDK can power portal, checkout, upgrades, downgrades, cancellations, and feature gates for those customers immediately.
+
+## What "migrating" actually means
+
+Nothing moves off Stripe. Specifically:
+
+- Your existing Stripe customers keep paying through the **same Stripe subscriptions** they're already on.
+- Charges, invoices, and payouts continue exactly as before.
+- Stripe remains authoritative for products, prices, customers, and subscriptions.
+
+What BillingOS imports is a mirror of that state — plus the missing piece Stripe doesn't have: **the mapping from your internal user IDs to those customers**, and the **features each subscription unlocks** in your app.
+
+## Before you start
+
+You'll need:
+
+- A BillingOS organization with [Stripe connected](/guides/connect-stripe) (OAuth, production).
+- The BillingOS products you want to map your Stripe products to. Create them under **Products** in the dashboard first — the import wizard will ask you to match Stripe products → BOS products.
+
+<Tip>
+  If you only have one or two pricing tiers, create the BillingOS products with the same features you offer today, then come back to run the import.
+</Tip>
+
+## Step 1 — Run the import wizard
+
+<Steps>
+  <Step title="Open Settings → Import Data">
+    Once Stripe is connected, you'll see a new **Import Data** tab in your organization settings.
+  </Step>
+  <Step title="Preview">
+    Click **Start import**. BillingOS scans your connected Stripe account and shows the totals:
+
+    ```
+    34  Customers
+     4  Products
+     9  Prices
+    30  Subscriptions
+    ```
+  </Step>
+  <Step title="Map products">
+    For each Stripe product, choose the BillingOS product it corresponds to. The wizard shows the count of active subscriptions per Stripe product so you can prioritize the important ones.
+
+    <Note>
+      Subscriptions whose Stripe product isn't mapped will be skipped. You can re-run the import later after adding missing mappings — all imports are idempotent.
+    </Note>
+  </Step>
+  <Step title="Click Migrate">
+    The job runs in the background. You'll see live progress (customers + subscriptions). For most accounts it completes in seconds; large accounts (10k+ subs) take a few minutes.
+  </Step>
+</Steps>
+
+## Step 2 — Pass `email` when you create session tokens
+
+This is the trick that makes everything "just work" for your existing customers. When your backend creates a session token, pass the user's email along with their ID:
+
+```typescript
+const { sessionToken, expiresAt } = await billing.createSessionToken({
+  externalUserId: user.id,
+  email: user.email, // ← the magic
+});
+```
+
+The first time any of your existing users hits the SDK, BillingOS looks up the imported customer row by email and binds it to your user ID. From that moment on, the customer is fully resolved — portal, checkout, feature gates, everything works.
+
+<Tip>
+  No backfill, no CSVs, no extra API calls. The binding happens once per customer, transparently, the next time they touch your app.
+</Tip>
+
+## Step 3 — Resolve "stuck" customers (if any)
+
+After the import completes, BillingOS classifies un-bound customers into two buckets:
+
+<CardGroup cols={2}>
+  <Card title="Pending" icon="hourglass">
+    Customers with a unique email. They'll auto-bind on first SDK session. **No action required.**
+  </Card>
+  <Card title="Needs attention" icon="triangle-exclamation">
+    Customers with no email, or sharing an email with another customer in Stripe. These need a one-time manual bind.
+  </Card>
+</CardGroup>
+
+If you have any in the "Needs attention" bucket, click **Resolve** on the import summary card to open the drawer. You can bind each one inline by pasting the matching user ID from your database.
+
+### Bulk-resolving from your backend
+
+For larger sets, use the Node SDK to script the binding:
+
+```typescript
+import { BillingOS } from "@billingos/node";
+
+const billing = new BillingOS({
+  secretKey: process.env.BILLINGOS_SECRET_KEY!,
+});
+
+// 1. Pull customers that aren't bound yet.
+const { customers } = await billing.listUnresolvedCustomers();
+
+// 2. Look each one up in your own DB and bind.
+for (const c of customers) {
+  if (!c.email) continue;
+  const user = await db.users.findByEmail(c.email);
+  if (user) {
+    await billing.bindCustomer(c.id, user.id);
+  }
+}
+```
+
+<Warning>
+  External IDs are immutable once set. Double-check before binding — there's no `unbind` operation.
+</Warning>
+
+## What happens next
+
+Once a customer is bound (auto via email, or manually), the following work for them with no extra code:
+
+- **Portal** — they can view their current plan, update payment method, cancel
+- **Checkout** — they can upgrade or downgrade through the BillingOS pricing table
+- **Feature gates** — `useFeature("api_calls")` returns the right entitlement
+- **Usage tracking** — `useTrackUsage` records consumption against their subscription
+
+All while their payment still flows through the same Stripe subscription they were on.
+
+## Re-running the import
+
+The import is fully idempotent. Re-run it any time you:
+
+- Add new Stripe products and need to map them
+- Have new customers in Stripe that weren't imported on the first pass
+- Migrate from another billing tool that ends up creating Stripe customers outside BillingOS
+
+Click **Re-run import** on the completed-import card. Existing rows are updated in place; new rows are inserted.
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Do I need to change anything in my app to keep my existing customers paying?">
+    No. Their subscriptions stay on Stripe and continue charging exactly as before. The only code change is passing `email` to `createSessionToken` so they auto-bind on first session.
+  </Accordion>
+
+  <Accordion title="What about inactive or canceled Stripe subscriptions?">
+    The import only ingests active-ish subscriptions (`active`, `trialing`, `past_due`, `unpaid`). Canceled and incomplete-expired subscriptions are skipped to keep the BillingOS state clean.
+  </Accordion>
+
+  <Accordion title="Can I import customers from multiple Stripe accounts into one BillingOS organization?">
+    Not in v1. The import flow assumes a single connected Stripe Connect account per organization.
+  </Accordion>
+
+  <Accordion title="What if I have customers using a free plan that doesn't exist in Stripe?">
+    The import only mirrors customers that exist in your Stripe account. Free-tier users that you track outside Stripe (e.g., in your own database) keep working as before — they'll get a BillingOS customer record the first time they hit your app with the SDK.
+  </Accordion>
+
+  <Accordion title="Will my customers see any disruption during the import?">
+    No. Imports happen in the background and don't touch their Stripe subscriptions. There's no double-charge, no payment retry, no email — your customers won't know anything happened.
+  </Accordion>
+</AccordionGroup>

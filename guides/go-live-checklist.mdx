@@ -8,7 +8,27 @@ icon: rocket
 
 Use this checklist to make sure everything is ready for production.
 
-### 1. Switch to live API keys
+### 1. Connect your live Stripe account
+
+In sandbox, BillingOS provisioned a test Stripe account for you. In production, you connect your own.
+
+- [ ] Switch to **Production** in the BillingOS environment switcher
+- [ ] Go to **Settings → Billing**
+- [ ] Click **Connect Your Stripe Account** and complete the OAuth flow
+- [ ] Confirm your account shows **Active** with charges and payouts enabled
+
+<Note>
+  Don't have a Stripe account yet? Sign up at [stripe.com](https://stripe.com) and complete merchant onboarding (business details, identity, bank account) before connecting. See the [Connect Stripe guide](/guides/connect-stripe) for the full walkthrough.
+</Note>
+
+### 2. Recreate your products in production
+
+Sandbox and production are isolated — products don't carry over.
+
+- [ ] Recreate every product, price, and feature you defined in sandbox
+- [ ] Verify product IDs are referenced correctly in any server-side code (entitlement checks, webhook handlers)
+
+### 3. Switch to live API keys
 
 Replace your test keys with live keys in your production environment:
 
@@ -25,7 +45,7 @@ The SDK auto-detects the environment from your key prefix:
 - `sk_test_*` routes to the sandbox API
 - `sk_live_*` routes to the production API
 
-### 2. Test the full customer journey
+### 4. Test the full customer journey
 
 Run through the complete flow with test cards before switching to live:
 
@@ -39,27 +59,28 @@ Run through the complete flow with test cards before switching to live:
 - [ ] Cancel subscription — cancellation flow works
 - [ ] Reactivate subscription — plan restores
 
-### 3. Verify Stripe Connect
+### 5. Verify Stripe is ready for live charges
 
-- [ ] Stripe Connect onboarding is complete in your BillingOS dashboard
-- [ ] Stripe account is verified and active
-- [ ] Payout settings are configured
+- [ ] Stripe account shows **Active** in `dashboard.stripe.com`
+- [ ] Bank account is connected and verified for payouts
+- [ ] Payout schedule is configured to your preference
+- [ ] Webhook signing secrets are configured if you're consuming Stripe events directly
 
-### 4. Review security
+### 6. Review security
 
 - [ ] Secret key is only used server-side (never in client code)
 - [ ] Session tokens are created with authenticated user IDs
 - [ ] Server-side entitlement checks are in place for critical features
 - [ ] HTTPS is enabled on your domain
 
-### 5. Error handling
+### 7. Error handling
 
 - [ ] Checkout failure shows a user-friendly error message
 - [ ] Payment decline shows the reason and next steps
 - [ ] Network errors are handled gracefully
 - [ ] `onError` callbacks are set on `CheckoutModal`
 
-### 6. Deploy
+### 8. Deploy
 
 - [ ] Environment variables set in production hosting
 - [ ] Test one real payment with a small amount
